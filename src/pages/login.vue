@@ -56,9 +56,15 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "LoginPage",
+
+  setup() {
+    const router = useRouter();
+    return { router };
+  },
 
   data() {
     return {
@@ -71,12 +77,43 @@ export default defineComponent({
 
   methods: {
     async handleLogin() {
+      if (!this.login.trim() || !this.password.trim()) {
+        alert("Por favor, preencha todos os campos.");
+        return;
+      }
 
+      this.loading = true;
+      try {
+        const response = await this.HTTP("POST", "auth/login", {
+          login: this.login.trim(),
+          password: this.password,
+        });
+
+        // O backend retorna sucesso ou erro - deixamos ele cuidar da lógica
+        alert("Login realizado com sucesso!");
+        this.router.push("/");
+      } catch (error: any) {
+        console.error("Erro no login:", error);
+
+        // Exibe a mensagem de erro que vem do backend
+        if (error.response?.data?.message) {
+          alert(error.response.data.message);
+        } else if (error.response?.data?.error) {
+          alert(error.response.data.error);
+        } else if (error.response?.status === 401) {
+          alert("Credenciais inválidas.");
+        } else if (error.code === "ECONNREFUSED") {
+          alert("Erro de conexão. Verifique se o servidor está rodando.");
+        } else {
+          alert("Erro ao tentar fazer login. Tente novamente.");
+        }
+      } finally {
+        this.loading = false;
+      }
     },
 
-
     goToRegister() {
-      this.$router.push("/register");
+      this.router.push("/register");
     },
   },
 });
