@@ -56,7 +56,7 @@
           prepend-icon="mdi-shield-crown"
           title="Administração"
           value="administracao"
-          to="/administracao"
+          to="/login"
           @click="drawer = false"
         ></v-list-item>
       </v-list>

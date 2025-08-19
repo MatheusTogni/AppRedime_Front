@@ -57,13 +57,16 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
 
 export default defineComponent({
   name: "LoginPage",
 
   setup() {
     const router = useRouter();
-    return { router };
+    const authStore = useAuthStore();
+    
+    return { router, authStore };
   },
 
   data() {
@@ -75,6 +78,13 @@ export default defineComponent({
     };
   },
 
+  async mounted() {
+    // Se já está autenticado, redireciona para administração
+    if (this.authStore.isLoggedIn) {
+      this.router.push("/administracao");
+    }
+  },
+
   methods: {
     async handleLogin() {
       if (!this.login.trim() || !this.password.trim()) {
@@ -84,14 +94,13 @@ export default defineComponent({
 
       this.loading = true;
       try {
-        const response = await this.HTTP("POST", "auth/login", {
+        await this.authStore.login({
           login: this.login.trim(),
           password: this.password,
         });
 
-        // O backend retorna sucesso ou erro - deixamos ele cuidar da lógica
         alert("Login realizado com sucesso!");
-        this.router.push("/");
+        this.router.push("/administracao");
       } catch (error: any) {
         console.error("Erro no login:", error);
 
