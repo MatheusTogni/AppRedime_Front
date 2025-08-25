@@ -1,8 +1,7 @@
 import axios, { type AxiosResponse, type AxiosRequestConfig } from 'axios';
+import type { HttpMethod } from '@/interfaces';
 
 const API_BASE_URL = 'http://localhost:3000';
-
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 class HttpService {
   constructor() {

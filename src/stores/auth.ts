@@ -1,17 +1,6 @@
 import { defineStore } from 'pinia'
 import { httpService } from '@/services/httpService'
-
-export interface User {
-  id: string
-  login: string
-  // Adicione outras propriedades do usuário conforme necessário
-}
-
-export interface AuthState {
-  token: string | null
-  user: User | null
-  isAuthenticated: boolean
-}
+import type { User, AuthState } from '@/interfaces'
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({

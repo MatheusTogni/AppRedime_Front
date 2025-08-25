@@ -79,7 +79,6 @@ export default defineComponent({
   },
 
   async mounted() {
-    // Se já está autenticado, redireciona para administração
     if (this.authStore.isLoggedIn) {
       this.router.push("/administracao");
     }
@@ -99,12 +98,10 @@ export default defineComponent({
           password: this.password,
         });
 
-        alert("Login realizado com sucesso!");
         this.router.push("/administracao");
       } catch (error: any) {
         console.error("Erro no login:", error);
 
-        // Exibe a mensagem de erro que vem do backend
         if (error.response?.data?.message) {
           alert(error.response.data.message);
         } else if (error.response?.data?.error) {

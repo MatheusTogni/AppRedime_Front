@@ -131,18 +131,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-
-interface Verse {
-  number: number;
-  text: string;
-}
-interface Chapter {
-  chapter: number;
-  verses: Verse[];
-}
-interface BibleData {
-  [bookName: string]: Chapter[];
-}
+import type { Verse, Chapter, BibleData } from '@/interfaces';
 
 export default defineComponent({
   name: 'BibliaPage',

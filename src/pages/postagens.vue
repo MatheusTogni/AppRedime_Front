@@ -1,33 +1,30 @@
 <template>
   <v-container fluid class="pa-4 px-md-6">
-    <!-- Dialog para exibir detalhes do post -->
     <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
       <v-card>
         <v-toolbar dark color="#121212">
           <v-btn icon dark @click="dialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>{{ selectedPost?.title }}</v-toolbar-title>
+          <v-toolbar-title>{{ selectedPost?.titulo }}</v-toolbar-title>
           <v-spacer></v-spacer>
         </v-toolbar>
 
         <v-card-text class="pa-0" v-if="selectedPost">
-          <v-img :src="selectedPost.imageUrl" height="300" cover></v-img>
+          <v-img 
+            v-if="selectedPost.images && selectedPost.images.length > 0"
+            :src="getImageUrl(selectedPost.images[0])" 
+            height="300" 
+            cover
+          ></v-img>
           <div class="pa-4">
             <div class="d-flex align-center mb-4">
               <div class="text-caption" style="color: #666">
-                {{ formatDate(selectedPost.date) }} • {{ selectedPost.author }}
+                {{ formatDate(selectedPost.criado_em) }}
               </div>
             </div>
             <p class="text-body-1" style="color: #fff; white-space: pre-line">
-              {{ selectedPost.preview }}
-
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
-              tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-              quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-              consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-              cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-              non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+              {{ selectedPost.descricao }}
             </p>
           </div>
         </v-card-text>
@@ -35,17 +32,11 @@
     </v-dialog>
 
     <v-row>
-      <v-col 
-        v-for="post in posts" 
-        :key="post.id" 
-        cols="12" 
-        sm="6" 
-        lg="4" 
-        class="pa-2"
-      >
+      <v-col v-for="post in posts" :key="post.id" cols="12" sm="6" lg="4" class="pa-2">
         <div class="post-card" @click="openPost(post)">
           <v-img
-            :src="post.imageUrl"
+            v-if="post.images && post.images.length > 0"
+            :src="getImageUrl(post.images[0])"
             height="200"
             cover
             class="post-image"
@@ -57,15 +48,19 @@
               </v-row>
             </template>
           </v-img>
+          
+          <div v-else class="no-image-placeholder" style="height: 200px; background-color: #333; display: flex; align-items: center; justify-content: center;">
+            <v-icon size="48" color="#666">mdi-image-off</v-icon>
+          </div>
 
           <div class="post-content pa-4">
             <h2 class="text-h5 font-weight-bold mb-2" style="color: #af1d36">
-              {{ post.title }}
+              {{ post.titulo }}
             </h2>
             <div class="text-caption mb-3" style="color: #666">
-              {{ formatDate(post.date) }} • {{ post.author }}
+              {{ formatDate(post.criado_em) }}
             </div>
-            <p class="text-body-2 mb-4" style="color: #fff">{{ post.preview }}</p>
+            <p class="text-body-2 mb-4" style="color: #fff">{{ post.descricao }}</p>
             <v-btn
               color="#af1d36"
               variant="text"
@@ -84,15 +79,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-
-interface Post {
-  id: number;
-  title: string;
-  author: string;
-  date: string;
-  preview: string;
-  imageUrl: string;
-}
+import type { Post, PostsResponse } from "@/interfaces";
 
 export default defineComponent({
   name: "PostagensPage",
@@ -117,50 +104,24 @@ export default defineComponent({
         .replace(".", "");
     },
 
-    formatCurrentDate(): string {
-      return new Date().toLocaleDateString("pt-BR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
+    getImageUrl(imagePath: string): string {
+      if (!imagePath) {
+        return '';
+      }
+      
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
+
+      const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+      return `/${cleanPath}`;
     },
 
     async loadPosts() {
       try {
-        this.loading = true;
-        this.posts = [
-          {
-            id: 3,
-            title: "Vivendo em Comunidade",
-            author: "Pastor Paulo",
-            date: "2025-08-11",
-            preview:
-              "A importância da comunhão entre os irmãos e como podemos fortalecer nossos laços como corpo de Cristo. Aprenda práticas e princípios bíblicos para uma vida em comunidade mais rica...",
-            imageUrl:
-              "https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-          },
-          {
-            id: 4,
-            title: "Meditação Diária",
-            author: "Pr. André Santos",
-            date: "2025-08-10",
-            preview:
-              "Como estabelecer uma rotina de meditação na Palavra de Deus e transformar sua vida espiritual através do estudo bíblico diário...",
-            imageUrl:
-              "https://images.unsplash.com/photo-1524758631624-e2822e304c36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-          },
-          {
-            id: 5,
-            title: "O Poder do Louvor",
-            author: "Min. Sarah Lima",
-            date: "2025-08-09",
-            preview:
-              "Descubra como o louvor pode transformar sua vida espiritual e aproximá-lo mais de Deus. Uma exploração profunda sobre a importância da adoração em nossa caminhada...",
-            imageUrl:
-              "https://images.unsplash.com/photo-1511715282680-fbf93a50e721?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-          },
-        ];
+        const resp = await this.HTTP("GET", "post/get-posts");
+        const data: PostsResponse = resp.data;
+        this.posts = data.posts;
       } catch (error) {
         console.error("Erro ao carregar postagens:", error);
       } finally {
@@ -200,6 +161,14 @@ export default defineComponent({
   box-shadow: 0 4px 20px rgba(175, 29, 54, 0.1);
 }
 
+.no-image-placeholder {
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(45deg, #2a2a2a 25%, transparent 25%, transparent 75%, #2a2a2a 75%), 
+              linear-gradient(45deg, #2a2a2a 25%, transparent 25%, transparent 75%, #2a2a2a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
 .text-caption {
   font-size: 0.875rem !important;
   letter-spacing: 0.5px;
@@ -221,6 +190,7 @@ export default defineComponent({
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -230,7 +200,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
   }
-  
+
   .post-content {
     flex-grow: 1;
   }

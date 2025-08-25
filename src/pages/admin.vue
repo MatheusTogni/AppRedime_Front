@@ -17,10 +17,8 @@
         <h1 class="text-h3 font-weight-bold mb-2" style="color: #af1d36">
           Painel Administrativo
         </h1>
-        <p class="text-h6 text-grey-lighten-1">
-          Gerencie o conteúdo do Redime App
-        </p>
-        
+        <p class="text-h6 text-grey-lighten-1">Gerencie o conteúdo do Redime App</p>
+
         <!-- Informações do usuário logado -->
         <v-chip
           v-if="authStore.user"
@@ -140,21 +138,23 @@
               rows="6"
               class="mb-4"
             ></v-textarea>
-            <v-select
-              v-model="novaPostagem.categoria"
-              :items="categorias"
-              label="Categoria"
+            <v-file-input
+              v-model="arquivos"
+              multiple
               variant="outlined"
+              label="Selecionar imagens"
+              prepend-icon="mdi-paperclip"
+              show-size
               class="mb-4"
-            ></v-select>
+            ></v-file-input>
           </v-form>
         </v-card-text>
         <v-card-actions class="pa-6 pt-0">
           <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="modalPostagem = false">
+          <v-btn color="grey" variant="flat" @click="modalPostagem = false">
             Cancelar
           </v-btn>
-          <v-btn color="primary" @click="criarPostagem">
+          <v-btn color="primary" variant="flat" @click="criarPostagem">
             Publicar Postagem
           </v-btn>
         </v-card-actions>
@@ -214,7 +214,7 @@
           <v-btn color="grey" variant="text" @click="modalEvento = false">
             Cancelar
           </v-btn>
-          <v-btn color="primary" @click="criarEvento">
+          <v-btn color="primary" variant="flat" @click="criarEvento">
             Criar Evento
           </v-btn>
         </v-card-actions>
@@ -263,7 +263,12 @@
           <v-btn color="grey" variant="text" @click="modalUpload = false">
             Cancelar
           </v-btn>
-          <v-btn color="primary" @click="fazerUpload" :disabled="!arquivos?.length">
+          <v-btn
+            color="primary"
+            variant="flat"
+            @click="fazerUpload"
+            :disabled="!arquivos?.length"
+          >
             Fazer Upload
           </v-btn>
         </v-card-actions>
@@ -273,187 +278,191 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { defineComponent } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
 
 export default defineComponent({
-  name: 'AdminPage',
-  
+  name: "AdminPage",
+
   setup() {
     const router = useRouter();
     const authStore = useAuthStore();
-    
+
     return { router, authStore };
   },
-  
+
   data() {
     return {
       // Modais
       modalPostagem: false,
       modalEvento: false,
       modalUpload: false,
-      
+
       // Dados das estatísticas
       stats: {
         posts: 15,
         events: 8,
         files: 32,
-        users: 147
+        users: 147,
       },
-      
+
       // Formulário nova postagem
       novaPostagem: {
-        titulo: '',
-        conteudo: '',
-        categoria: ''
+        titulo: "",
+        conteudo: "",
+        categoria: "",
       },
-      
+
       // Formulário novo evento
       novoEvento: {
-        nome: '',
-        descricao: '',
-        data: '',
-        hora: '',
-        local: ''
+        nome: "",
+        descricao: "",
+        data: "",
+        hora: "",
+        local: "",
       },
-      
+
       // Upload de arquivos
-      arquivos: null,
+      arquivos: [] as File[],
       uploadInfo: {
-        categoria: '',
-        descricao: ''
+        categoria: "",
+        descricao: "",
       },
-      
+
       // Categorias para postagens
       categorias: [
-        'Devocional',
-        'Anúncio',
-        'Estudo Bíblico',
-        'Oração',
-        'Testemunho',
-        'Evento',
-        'Geral'
-      ]
+        "Devocional",
+        "Anúncio",
+        "Estudo Bíblico",
+        "Oração",
+        "Testemunho",
+        "Evento",
+        "Geral",
+      ],
     };
   },
-  
+
   async mounted() {
     // Verifica se está autenticado ao montar o componente
     if (!this.authStore.isLoggedIn) {
       await this.authStore.checkAuth();
       if (!this.authStore.isLoggedIn) {
-        this.router.push('/login');
+        this.router.push("/login");
         return;
       }
     }
   },
-  
+
   methods: {
     async logout() {
       try {
         await this.authStore.logout();
-        alert('Logout realizado com sucesso!');
-        this.router.push('/');
+        alert("Logout realizado com sucesso!");
+        this.router.push("/");
       } catch (error) {
-        console.error('Erro no logout:', error);
+        console.error("Erro no logout:", error);
         // Mesmo se der erro, limpa a autenticação local
         this.authStore.clearAuth();
-        this.router.push('/');
+        this.router.push("/");
       }
     },
     abrirModalPostagem() {
       this.modalPostagem = true;
     },
-    
+
     abrirModalEvento() {
       this.modalEvento = true;
     },
-    
+
     abrirModalUpload() {
       this.modalUpload = true;
     },
-    
+
     async criarPostagem() {
       try {
-        // Aqui você faria a integração com o backend
-        console.log('Criando postagem:', this.novaPostagem);
-        
-        // Simular sucesso
-        alert('Postagem criada com sucesso!');
-        this.modalPostagem = false;
-        
-        // Limpar formulário
-        this.novaPostagem = {
-          titulo: '',
-          conteudo: '',
-          categoria: ''
-        };
-        
-        // Atualizar estatísticas
-        this.stats.posts++;
-        
+        const formData = new FormData();
+
+        formData.append("titulo", this.novaPostagem.titulo);
+        formData.append("descricao", this.novaPostagem.conteudo);
+
+        if (this.arquivos && this.arquivos.length > 0) {
+          for (const arquivo of this.arquivos) {
+            formData.append("images", arquivo);
+          }
+        }
+
+        const response = await this.HTTP("POST", "post/create-post", formData);
+
+        if (response) {
+          alert("Postagem criada com sucesso!");
+          this.modalPostagem = false;
+          this.novaPostagem = {
+            titulo: "",
+            conteudo: "",
+            categoria: "",
+          };
+          this.arquivos = [];
+        }
       } catch (error) {
-        console.error('Erro ao criar postagem:', error);
-        alert('Erro ao criar postagem. Tente novamente.');
+        console.error("Erro ao criar postagem:", error);
+        alert("Erro ao criar postagem");
       }
     },
-    
+
     async criarEvento() {
       try {
         // Aqui você faria a integração com o backend
-        console.log('Criando evento:', this.novoEvento);
-        
+        console.log("Criando evento:", this.novoEvento);
+
         // Simular sucesso
-        alert('Evento criado com sucesso!');
+        alert("Evento criado com sucesso!");
         this.modalEvento = false;
-        
+
         // Limpar formulário
         this.novoEvento = {
-          nome: '',
-          descricao: '',
-          data: '',
-          hora: '',
-          local: ''
+          nome: "",
+          descricao: "",
+          data: "",
+          hora: "",
+          local: "",
         };
-        
+
         // Atualizar estatísticas
         this.stats.events++;
-        
       } catch (error) {
-        console.error('Erro ao criar evento:', error);
-        alert('Erro ao criar evento. Tente novamente.');
+        console.error("Erro ao criar evento:", error);
+        alert("Erro ao criar evento. Tente novamente.");
       }
     },
-    
+
     async fazerUpload() {
       try {
         // Aqui você faria a integração com o backend
-        console.log('Fazendo upload:', {
+        console.log("Fazendo upload:", {
           arquivos: this.arquivos,
-          info: this.uploadInfo
+          info: this.uploadInfo,
         });
-        
+
         // Simular sucesso
-        alert('Arquivos enviados com sucesso!');
+        alert("Arquivos enviados com sucesso!");
         this.modalUpload = false;
-        
+
         // Limpar formulário
-        this.arquivos = null;
+        this.arquivos = [];
         this.uploadInfo = {
-          categoria: '',
-          descricao: ''
+          categoria: "",
+          descricao: "",
         };
-        
+
         // Atualizar estatísticas
         this.stats.files += this.arquivos?.length || 0;
-        
       } catch (error) {
-        console.error('Erro ao fazer upload:', error);
-        alert('Erro ao enviar arquivos. Tente novamente.');
+        console.error("Erro ao fazer upload:", error);
+        alert("Erro ao enviar arquivos. Tente novamente.");
       }
-    }
-  }
+    },
+  },
 });
 </script>
 
