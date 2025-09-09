@@ -154,7 +154,7 @@
           <v-btn color="grey" variant="flat" @click="modalPostagem = false">
             Cancelar
           </v-btn>
-          <v-btn color="primary" variant="flat" @click="criarPostagem">
+          <v-btn :loading="loading" color="primary" variant="flat" @click="criarPostagem">
             Publicar Postagem
           </v-btn>
         </v-card-actions>
@@ -294,27 +294,20 @@ export default defineComponent({
 
   data() {
     return {
-      // Modais
       modalPostagem: false,
       modalEvento: false,
       modalUpload: false,
-
-      // Dados das estatísticas
       stats: {
         posts: 15,
         events: 8,
         files: 32,
         users: 147,
       },
-
-      // Formulário nova postagem
       novaPostagem: {
         titulo: "",
         conteudo: "",
         categoria: "",
       },
-
-      // Formulário novo evento
       novoEvento: {
         nome: "",
         descricao: "",
@@ -322,15 +315,11 @@ export default defineComponent({
         hora: "",
         local: "",
       },
-
-      // Upload de arquivos
       arquivos: [] as File[],
       uploadInfo: {
         categoria: "",
         descricao: "",
       },
-
-      // Categorias para postagens
       categorias: [
         "Devocional",
         "Anúncio",
@@ -340,11 +329,11 @@ export default defineComponent({
         "Evento",
         "Geral",
       ],
+      loading: false,
     };
   },
 
   async mounted() {
-    // Verifica se está autenticado ao montar o componente
     if (!this.authStore.isLoggedIn) {
       await this.authStore.checkAuth();
       if (!this.authStore.isLoggedIn) {
@@ -358,11 +347,9 @@ export default defineComponent({
     async logout() {
       try {
         await this.authStore.logout();
-        alert("Logout realizado com sucesso!");
         this.router.push("/");
       } catch (error) {
         console.error("Erro no logout:", error);
-        // Mesmo se der erro, limpa a autenticação local
         this.authStore.clearAuth();
         this.router.push("/");
       }
@@ -380,6 +367,11 @@ export default defineComponent({
     },
 
     async criarPostagem() {
+      if(!this.novaPostagem.titulo || !this.novaPostagem.conteudo) {
+        this.$toast.info("Por favor, preencha o título e o conteúdo da postagem.");
+        return;
+      }
+      this.loading = true
       try {
         const formData = new FormData();
 
@@ -395,7 +387,7 @@ export default defineComponent({
         const response = await this.HTTP("POST", "post/create-post", formData);
 
         if (response) {
-          alert("Postagem criada com sucesso!");
+          this.$toast.success("Postagem criada com sucesso!");
           this.modalPostagem = false;
           this.novaPostagem = {
             titulo: "",
@@ -403,63 +395,28 @@ export default defineComponent({
             categoria: "",
           };
           this.arquivos = [];
+          this.loading = false
         }
       } catch (error) {
         console.error("Erro ao criar postagem:", error);
-        alert("Erro ao criar postagem");
+        this.loading = false
+        this.$toast.error("Erro ao criar postagem. Tente novamente.");
       }
     },
 
     async criarEvento() {
       try {
-        // Aqui você faria a integração com o backend
-        console.log("Criando evento:", this.novoEvento);
 
-        // Simular sucesso
-        alert("Evento criado com sucesso!");
-        this.modalEvento = false;
-
-        // Limpar formulário
-        this.novoEvento = {
-          nome: "",
-          descricao: "",
-          data: "",
-          hora: "",
-          local: "",
-        };
-
-        // Atualizar estatísticas
-        this.stats.events++;
       } catch (error) {
-        console.error("Erro ao criar evento:", error);
-        alert("Erro ao criar evento. Tente novamente.");
+
       }
     },
 
     async fazerUpload() {
       try {
-        // Aqui você faria a integração com o backend
-        console.log("Fazendo upload:", {
-          arquivos: this.arquivos,
-          info: this.uploadInfo,
-        });
 
-        // Simular sucesso
-        alert("Arquivos enviados com sucesso!");
-        this.modalUpload = false;
-
-        // Limpar formulário
-        this.arquivos = [];
-        this.uploadInfo = {
-          categoria: "",
-          descricao: "",
-        };
-
-        // Atualizar estatísticas
-        this.stats.files += this.arquivos?.length || 0;
       } catch (error) {
-        console.error("Erro ao fazer upload:", error);
-        alert("Erro ao enviar arquivos. Tente novamente.");
+
       }
     },
   },

@@ -1,11 +1,11 @@
 <template>
   <v-container>
     <v-row justify="center" class="mt-8">
-      <v-col cols="12" md="8" lg="6">
+      <v-col cols="12" md="8" lg="8">
         <v-card class="text-center pa-6">
           <v-icon size="80" color="primary" class="mb-4">mdi-cross</v-icon>
 
-          <h1 class="text-h3 mb-4">Bem-vindo ao Redime App</h1>
+          <h1 class="text-h3 mb-4">Bem-vindo a Redime</h1>
 
           <div class="text-h6 mb-6" style="color: white; font-family: 'Lora', serif">
             <span>"{{ versiculoApoio.texto }}"</span>
@@ -61,6 +61,45 @@
               </v-btn>
             </v-col>
           </v-row>
+
+          <v-divider class="my-6"></v-divider>
+
+          <!-- Botões de teste para os toasts -->
+          <div class="mb-6">
+            <h3 class="text-h6 mb-3">Teste os Toasts:</h3>
+            <v-row justify="center">
+              <v-col cols="auto">
+                <v-btn 
+                  color="blue" 
+                  variant="outlined" 
+                  size="small"
+                  @click="testInfoToast"
+                >
+                  Info Toast
+                </v-btn>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn 
+                  color="green" 
+                  variant="outlined" 
+                  size="small"
+                  @click="testSuccessToast"
+                >
+                  Success Toast
+                </v-btn>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn 
+                  color="red" 
+                  variant="outlined" 
+                  size="small"
+                  @click="testErrorToast"
+                >
+                  Error Toast
+                </v-btn>
+              </v-col>
+            </v-row>
+          </div>
 
           <v-divider class="my-6"></v-divider>
 
@@ -137,6 +176,17 @@ export default {
       Math.floor(Math.random() * this.versiculos.length)
     ];
   },
+  methods: {
+    testInfoToast() {
+      this.$toast.info("Esta é uma mensagem informativa!");
+    },
+    testSuccessToast() {
+      this.$toast.success("Operação realizada com sucesso!");
+    },
+    testErrorToast() {
+      this.$toast.error("Ocorreu um erro durante a operação!");
+    }
+  }
 };
 </script>
 

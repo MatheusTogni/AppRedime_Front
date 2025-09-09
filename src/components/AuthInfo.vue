@@ -40,10 +40,7 @@ const { isAuthenticated, user, logout } = useAuth()
 const router = useRouter()
 
 const handleLogout = async () => {
-  const result = await logout()
-  if (result.success) {
-    alert('Logout realizado com sucesso!')
-  }
+  await logout()
 }
 
 const goToLogin = () => {

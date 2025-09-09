@@ -49,12 +49,9 @@ export function useAuth() {
   }
 
   return {
-    // Estado
     isAuthenticated,
     user,
     token,
-    
-    // Ações
     login,
     logout,
     checkAuth,

@@ -4,13 +4,12 @@
  * Automatically included in `./src/main.ts`
  */
 
-// Plugins
 import vuetify from './vuetify'
 import pinia from '../stores'
 import router from '../router'
 import http from './http'
+import toast from './toast'
 
-// Types
 import type { App } from 'vue'
 
 export function registerPlugins (app: App) {
@@ -19,4 +18,5 @@ export function registerPlugins (app: App) {
     .use(router)
     .use(pinia)
     .use(http)
+    .use(toast)
 }

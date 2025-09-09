@@ -11,5 +11,6 @@ declare module 'vue' {
     AuthInfo: typeof import('./components/AuthInfo.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ToastContainer: typeof import('./components/ToastContainer.vue')['default']
   }
 }

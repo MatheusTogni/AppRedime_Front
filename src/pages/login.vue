@@ -87,7 +87,7 @@ export default defineComponent({
   methods: {
     async handleLogin() {
       if (!this.login.trim() || !this.password.trim()) {
-        alert("Por favor, preencha todos os campos.");
+        this.$toast.info("Por favor, preencha todos os campos.");
         return;
       }
 
@@ -101,18 +101,11 @@ export default defineComponent({
         this.router.push("/administracao");
       } catch (error: any) {
         console.error("Erro no login:", error);
-
-        if (error.response?.data?.message) {
-          alert(error.response.data.message);
-        } else if (error.response?.data?.error) {
-          alert(error.response.data.error);
+        if (error.response?.data?.error) {
+          this.$toast.info(error.response.data.error);
         } else if (error.response?.status === 401) {
-          alert("Credenciais inválidas.");
-        } else if (error.code === "ECONNREFUSED") {
-          alert("Erro de conexão. Verifique se o servidor está rodando.");
-        } else {
-          alert("Erro ao tentar fazer login. Tente novamente.");
-        }
+          this.$toast.info("Credenciais inválidas.");
+        } 
       } finally {
         this.loading = false;
       }
