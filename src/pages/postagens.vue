@@ -1,5 +1,39 @@
 <template>
   <v-container fluid class="pa-4 px-md-6">
+    <!-- Filtros -->
+    <v-card class="mb-6" elevation="4">
+      <v-card-title class="bg-primary white--text">
+        <v-icon color="white" class="mr-3">mdi-filter</v-icon>
+        Filtros de Busca
+      </v-card-title>
+      <v-card-text class="pa-6">
+        <v-row align="center" no-gutters>
+          <v-col cols="12" md="11" class="pr-3">
+            <v-text-field
+              v-model="filtros.titulo"
+              label="Buscar por título"
+              variant="outlined"
+              prepend-inner-icon="mdi-magnify"
+              clearable
+              @input="aplicarFiltros"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="1" class="d-flex align-center justify-center">
+            <v-btn
+              icon
+              color="primary"
+              variant="flat"
+              size="large"
+              @click="abrirFiltroData"
+              class="filter-circle-btn"
+            >
+              <v-icon>mdi-filter</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
     <v-dialog v-model="dialog" fullscreen transition="dialog-bottom-transition">
       <v-card>
         <v-toolbar dark color="#121212">
@@ -31,8 +65,55 @@
       </v-card>
     </v-dialog>
 
+    <!-- Dialog de Filtro por Data -->
+    <v-dialog v-model="dialogFiltroData" max-width="400px">
+      <v-card>
+        <v-card-title class="bg-primary white--text">
+          <v-icon left color="white" class="mr-3">mdi-calendar-filter</v-icon>
+          Filtrar por Data
+        </v-card-title>
+        <v-card-text class="pa-6">
+          <v-row>
+            <v-col cols="12">
+              <v-text-field
+                v-model="filtroDataForm.dataInicio"
+                label="Data inicial"
+                type="date"
+                variant="outlined"
+                prepend-inner-icon="mdi-calendar"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-text-field
+                v-model="filtroDataForm.dataFim"
+                label="Data final"
+                type="date"
+                variant="outlined"
+                prepend-inner-icon="mdi-calendar"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions class="pa-6 pt-0">
+          <v-btn color="grey" variant="flat" @click="dialogFiltroData = false">
+            Cancelar
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-magnify"
+            @click="aplicarFiltroData"
+            :loading="aplicandoFiltroData"
+          >
+            Consultar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-row>
-      <v-col v-for="post in posts" :key="post.id" cols="12" sm="6" lg="4" class="pa-2">
+      <v-col v-for="post in postagensFiltradas" :key="post.id" cols="12" sm="6" lg="4" class="pa-2">
         <div class="post-card" @click="openPost(post)">
           <v-img
             v-if="post.images && post.images.length > 0"
@@ -88,8 +169,20 @@ export default defineComponent({
     return {
       loading: true,
       dialog: false,
+      dialogFiltroData: false,
+      aplicandoFiltroData: false,
       selectedPost: null as Post | null,
       posts: [] as Post[],
+      postagensFiltradas: [] as Post[],
+      filtros: {
+        titulo: '',
+        dataInicio: '',
+        dataFim: ''
+      },
+      filtroDataForm: {
+        dataInicio: '',
+        dataFim: ''
+      }
     };
   },
 
@@ -122,10 +215,64 @@ export default defineComponent({
         const resp = await this.HTTP("GET", "post/get-posts");
         const data: PostsResponse = resp.data;
         this.posts = data.posts;
+        this.aplicarFiltros();
       } catch (error) {
         console.error("Erro ao carregar postagens:", error);
+        this.$toast.error("Erro ao carregar postagens");
       } finally {
         this.loading = false;
+      }
+    },
+
+    aplicarFiltros() {
+      let filtradas = [...this.posts];
+
+      // Filtro por título
+      if (this.filtros.titulo) {
+        filtradas = filtradas.filter(post =>
+          post.titulo.toLowerCase().includes(this.filtros.titulo.toLowerCase())
+        );
+      }
+
+      // Filtro por data
+      if (this.filtros.dataInicio) {
+        const dataInicio = new Date(this.filtros.dataInicio);
+        filtradas = filtradas.filter(post =>
+          new Date(post.criado_em) >= dataInicio
+        );
+      }
+
+      if (this.filtros.dataFim) {
+        const dataFim = new Date(this.filtros.dataFim);
+        dataFim.setHours(23, 59, 59, 999); // Fim do dia
+        filtradas = filtradas.filter(post =>
+          new Date(post.criado_em) <= dataFim
+        );
+      }
+
+      this.postagensFiltradas = filtradas;
+    },
+
+    abrirFiltroData() {
+      this.filtroDataForm = {
+        dataInicio: this.filtros.dataInicio,
+        dataFim: this.filtros.dataFim
+      };
+      this.dialogFiltroData = true;
+    },
+
+    async aplicarFiltroData() {
+      this.aplicandoFiltroData = true;
+      try {
+        this.filtros.dataInicio = this.filtroDataForm.dataInicio;
+        this.filtros.dataFim = this.filtroDataForm.dataFim;
+        this.aplicarFiltros();
+        this.dialogFiltroData = false;
+        this.$toast.success("Filtro de data aplicado com sucesso!");
+      } catch (error) {
+        this.$toast.error("Erro ao aplicar filtro");
+      } finally {
+        this.aplicandoFiltroData = false;
       }
     },
 
@@ -192,6 +339,42 @@ export default defineComponent({
   -webkit-line-clamp: 3;
   line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+:deep(.v-card-title) {
+  background: #af1d36 !important;
+  color: white !important;
+}
+
+:deep(.v-dialog .v-card) {
+  background-color: #1e1e1e !important;
+  border-radius: 16px;
+}
+
+:deep(.v-text-field .v-field) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.v-btn {
+  border-radius: 12px;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.filter-circle-btn {
+  border-radius: 50% !important;
+  width: 56px !important;
+  height: 56px !important;
+  box-shadow: 0 4px 12px rgba(175, 29, 54, 0.3);
+  transition: all 0.3s ease;
+  min-height: 56px !important;
+}
+
+.filter-circle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 18px rgba(175, 29, 54, 0.5);
 }
 
 @media (min-width: 960px) {
