@@ -1,5 +1,16 @@
 <template>
   <v-container fluid class="pa-4 px-md-6">
+  <v-row justify="center" class="mb-8">
+      <v-col cols="12" class="text-center">
+        <h1 class="text-h3 font-weight-bold mb-2" style="color: #af1d36">
+          <v-icon size="40" color="#af1d36" class="mr-3">mdi-post</v-icon>
+          Postagens da Redime
+        </h1>
+        <p class="text-h6 text-grey-lighten-1">
+          Fique por dentro das últimas notícias e atualizações da Redime!
+        </p>
+      </v-col>
+    </v-row>
     <!-- Filtros -->
     <v-card class="mb-6" elevation="4">
       <v-card-title class="bg-primary white--text">
@@ -8,7 +19,7 @@
       </v-card-title>
       <v-card-text class="pa-6">
         <v-row align="center" no-gutters>
-          <v-col cols="12" md="11" class="pr-3">
+          <v-col cols="10" md="11" class="pr-3">
             <v-text-field
               v-model="filtros.titulo"
               label="Buscar por título"
@@ -18,7 +29,7 @@
               @input="aplicarFiltros"
             ></v-text-field>
           </v-col>
-          <v-col cols="12" md="1" class="d-flex align-center justify-center">
+          <v-col cols="2" md="1" class=" mb-5 d-flex align-center justify-center">
             <v-btn
               icon
               color="primary"
@@ -207,7 +218,7 @@ export default defineComponent({
       }
 
       const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-      return `/${cleanPath}`;
+      return `http://localhost:3000/${cleanPath}`;
     },
 
     async loadPosts() {
@@ -227,26 +238,9 @@ export default defineComponent({
     aplicarFiltros() {
       let filtradas = [...this.posts];
 
-      // Filtro por título
       if (this.filtros.titulo) {
         filtradas = filtradas.filter(post =>
           post.titulo.toLowerCase().includes(this.filtros.titulo.toLowerCase())
-        );
-      }
-
-      // Filtro por data
-      if (this.filtros.dataInicio) {
-        const dataInicio = new Date(this.filtros.dataInicio);
-        filtradas = filtradas.filter(post =>
-          new Date(post.criado_em) >= dataInicio
-        );
-      }
-
-      if (this.filtros.dataFim) {
-        const dataFim = new Date(this.filtros.dataFim);
-        dataFim.setHours(23, 59, 59, 999); // Fim do dia
-        filtradas = filtradas.filter(post =>
-          new Date(post.criado_em) <= dataFim
         );
       }
 
@@ -261,18 +255,67 @@ export default defineComponent({
       this.dialogFiltroData = true;
     },
 
+    async limparFiltros() {
+      this.filtros = {
+        titulo: '',
+        dataInicio: '',
+        dataFim: ''
+      };
+      this.filtroDataForm = {
+        dataInicio: '',
+        dataFim: ''
+      };
+      
+      await this.loadPosts();
+      
+      this.dialogFiltroData = false;
+      this.$toast.success("Filtros limpos com sucesso!");
+    },
+
     async aplicarFiltroData() {
       this.aplicandoFiltroData = true;
       try {
         this.filtros.dataInicio = this.filtroDataForm.dataInicio;
         this.filtros.dataFim = this.filtroDataForm.dataFim;
-        this.aplicarFiltros();
+        
+        await this.loadPostsWithDateFilter();
+        
         this.dialogFiltroData = false;
         this.$toast.success("Filtro de data aplicado com sucesso!");
       } catch (error) {
         this.$toast.error("Erro ao aplicar filtro");
       } finally {
         this.aplicandoFiltroData = false;
+      }
+    },
+
+    async loadPostsWithDateFilter() {
+      this.loading = true;
+      try {
+        let url = "post/get-posts";
+        const params = new URLSearchParams();
+        
+        if (this.filtros.dataInicio) {
+          params.append('dataInicio', this.filtros.dataInicio);
+        }
+        
+        if (this.filtros.dataFim) {
+          params.append('dataFim', this.filtros.dataFim);
+        }
+        
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+        
+        const resp = await this.HTTP("GET", url);
+        const data: PostsResponse = resp.data;
+        this.posts = data.posts;
+        this.aplicarFiltros();
+      } catch (error) {
+        console.error("Erro ao carregar postagens filtradas:", error);
+        this.$toast.error("Erro ao carregar postagens filtradas");
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -364,7 +407,7 @@ export default defineComponent({
 }
 
 .filter-circle-btn {
-  border-radius: 50% !important;
+  border-radius: 30% !important;
   width: 56px !important;
   height: 56px !important;
   box-shadow: 0 4px 12px rgba(175, 29, 54, 0.3);

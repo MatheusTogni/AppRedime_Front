@@ -167,7 +167,7 @@
                 <v-btn color="grey" variant="flat" @click="modalPostagem = false">
                   Cancelar
                 </v-btn>
-                <v-btn class="ml-2" :loading="loading" color="primary" variant="flat" @click="criarPostagem">
+                <v-btn class="ml-2" :loading="loadingPostagem" color="primary" variant="flat" @click="criarPostagem">
                   Publicar Postagem
                 </v-btn>
               </div>
@@ -250,20 +250,197 @@
     </v-dialog>
 
     <!-- Modal para Novo Evento -->
-    <v-dialog v-model="modalEvento" max-width="800px">
+    <v-dialog v-model="modalEvento" max-width="1000px" persistent>
+      <v-card>
+        <v-card-title class="text-h5 bg-primary white--text">
+          <v-icon left color="white" class="mr-3">mdi-calendar-plus</v-icon>
+          Criar Evento
+        </v-card-title>
+        
+        <v-card-text class="pa-6">
+          <v-row>
+            <!-- Calendário customizado -->
+            <v-col cols="12" md="8">
+              
+              <!-- Navegação do calendário -->
+              <v-card class="mb-4" elevation="2">
+                <v-card-text class="d-flex align-center justify-space-between pa-4">
+                  <v-btn
+                    icon="mdi-chevron-left"
+                    variant="text"
+                    @click="mesAnterior"
+                  ></v-btn>
+                  
+                  <div class="text-center">
+                    <h4 class="text-h6 font-weight-bold">
+                      {{ nomesMeses[mesAtual] }} {{ anoAtual }}
+                    </h4>
+                  </div>
+                  
+                  <v-btn
+                    icon="mdi-chevron-right"
+                    variant="text"
+                    @click="proximoMes"
+                  ></v-btn>
+                </v-card-text>
+              </v-card>
+
+              <!-- Calendário -->
+              <v-card elevation="4">
+                <v-card-text class="pa-0">
+                  <!-- Cabeçalho dos dias da semana -->
+                  <div class="calendar-header-grid">
+                    <div
+                      v-for="dia in diasSemana"
+                      :key="dia"
+                      class="calendar-header-day"
+                    >
+                      <span class="font-weight-bold text-body-2">{{ dia }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Dias do calendário -->
+                  <div class="calendar-grid">
+                    <div
+                      v-for="(dia, index) in diasCalendario"
+                      :key="index"
+                      class="calendar-day"
+                      :class="{
+                        'outro-mes': !dia.mesAtual,
+                        'hoje': dia.hoje,
+                        'selecionado': dia.selecionado,
+                        'com-evento': dia.eventos.length > 0
+                      }"
+                      @click="selecionarDia(dia)"
+                    >
+                      <div class="day-number">{{ dia.numero }}</div>
+                      
+                      <!-- Indicadores de eventos existentes -->
+                      <div v-if="dia.eventos.length > 0" class="eventos-indicator">
+                        <v-chip
+                          v-for="evento in dia.eventos.slice(0, 1)"
+                          :key="evento.id"
+                          size="x-small"
+                          :color="evento.cor"
+                          class="evento-mini mb-1"
+                        >
+                          {{ evento.titulo.substring(0, 6) }}{{ evento.titulo.length > 6 ? '...' : '' }}
+                        </v-chip>
+                        <span v-if="dia.eventos.length > 1" class="text-caption">
+                          +{{ dia.eventos.length - 1 }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+              
+              <v-alert 
+                v-if="dataSelecionadaCalendario" 
+                type="info" 
+                class="mt-4"
+                variant="tonal"
+              >
+                <strong>Data selecionada:</strong> {{ formatarDataSelecionada(dataSelecionadaCalendario) }}
+              </v-alert>
+            </v-col>
+
+            <!-- Informações do evento selecionado -->
+            <v-col cols="12" md="4" v-if="dataSelecionadaCalendario">
+              <v-card elevation="2" class="pa-4">
+                <h4 class="text-h6 mb-4">Eventos nesta data</h4>
+                
+                <div v-if="eventosNaDataSelecionada.length === 0" class="text-center py-4">
+                  <v-icon size="48" color="grey" class="mb-2">mdi-calendar-blank</v-icon>
+                  <p class="text-grey">Nenhum evento nesta data</p>
+                </div>
+                
+                <v-list v-else density="compact">
+                  <v-list-item
+                    v-for="evento in eventosNaDataSelecionada"
+                    :key="evento.id"
+                    class="mb-2 rounded border"
+                  >
+                    <template v-slot:prepend>
+                      <v-avatar :color="evento.cor" size="30">
+                        <v-icon color="white" size="16">mdi-calendar</v-icon>
+                      </v-avatar>
+                    </template>
+                    
+                    <v-list-item-title class="text-body-2">{{ evento.titulo }}</v-list-item-title>
+                    <v-list-item-subtitle class="text-caption">{{ evento.descricao }}</v-list-item-subtitle>
+
+                    <template v-slot:append>
+                        <v-btn
+                          size="small"
+                          color="green"
+                          variant="text"
+                          icon="mdi-pencil"
+                          @click="editarEvento(evento)"
+                        ></v-btn>
+                        <v-btn
+                          size="small"
+                          color="primary"
+                          variant="text"
+                          icon="mdi-delete"
+                          @click="confirmarExclusaoEvento(evento)"
+                        ></v-btn>
+                    </template>
+                  </v-list-item>
+                </v-list>
+                
+                <v-btn
+                  color="primary"
+                  variant="flat"
+                  block
+                  class="mt-4"
+                  prepend-icon="mdi-plus"
+                  @click="abrirDialogNovoEvento"
+                >
+                  Adicionar Evento
+                </v-btn>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="flat" @click="fecharModalEvento">
+            Fechar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog para criar novo evento -->
+    <v-dialog v-model="dialogNovoEvento" max-width="600px" persistent>
       <v-card>
         <v-card-title class="text-h5 bg-primary white--text">
           <v-icon left color="white" class="mr-3">mdi-calendar-plus</v-icon>
           Novo Evento
         </v-card-title>
+        
         <v-card-text class="pa-6">
-          <v-form>
+          <v-alert 
+            v-if="dataSelecionadaCalendario" 
+            type="info" 
+            class="mb-4"
+            variant="tonal"
+          >
+            <strong>Data:</strong> {{ formatarDataSelecionada(dataSelecionadaCalendario) }}
+          </v-alert>
+
+          <v-form ref="formEvento">
             <v-text-field
-              v-model="novoEvento.nome"
-              label="Nome do Evento"
+              v-model="novoEvento.titulo"
+              label="Título do Evento"
               variant="outlined"
               class="mb-4"
+              :rules="[v => !!v || 'Título é obrigatório']"
+              required
             ></v-text-field>
+            
             <v-textarea
               v-model="novoEvento.descricao"
               label="Descrição"
@@ -271,38 +448,44 @@
               rows="4"
               class="mb-4"
             ></v-textarea>
-            <v-row>
-              <v-col cols="6">
-                <v-text-field
-                  v-model="novoEvento.data"
-                  label="Data"
-                  type="date"
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="6">
-                <v-text-field
-                  v-model="novoEvento.hora"
-                  label="Hora"
-                  type="time"
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-text-field
-              v-model="novoEvento.local"
-              label="Local"
+
+            <v-select
+              v-model="novoEvento.cor"
+              :items="coresDisponiveis"
+              label="Cor do Evento"
               variant="outlined"
               class="mb-4"
-            ></v-text-field>
+            >
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props">
+                  <template v-slot:prepend>
+                    <v-avatar :color="item.value" size="20"></v-avatar>
+                  </template>
+                </v-list-item>
+              </template>
+              <template v-slot:selection="{ item }">
+                <div class="d-flex align-center">
+                  <v-avatar :color="item.value" size="20" class="mr-2"></v-avatar>
+                  {{ item.title }}
+                </div>
+              </template>
+            </v-select>
           </v-form>
         </v-card-text>
+        
         <v-card-actions class="pa-6 pt-0">
           <v-spacer></v-spacer>
-          <v-btn color="grey" variant="flat" @click="modalEvento = false">
+          
+          <v-btn color="grey" variant="flat" @click="fecharDialogNovoEvento">
             Cancelar
           </v-btn>
-          <v-btn color="primary" variant="flat" @click="criarEvento">
+          
+          <v-btn 
+            :loading="loadingEvento" 
+            color="primary" 
+            variant="flat" 
+            @click="criarEvento"
+          >
             Criar Evento
           </v-btn>
         </v-card-actions>
@@ -520,6 +703,106 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal de edição de evento -->
+    <v-dialog v-model="modalEditarEvento" max-width="600px">
+      <v-card>
+        <v-card-title class="text-h5 bg-primary white--text">
+          <v-icon left color="white" class="mr-3">mdi-pencil</v-icon>
+          Editar Evento
+        </v-card-title>
+        <v-card-text class="pa-6">
+          <v-form>
+            <v-text-field
+              v-model="eventoEditando.titulo"
+              label="Título do Evento"
+              variant="outlined"
+              class="mb-4"
+            ></v-text-field>
+            
+            <v-textarea
+              v-model="eventoEditando.descricao"
+              label="Descrição"
+              variant="outlined"
+              rows="4"
+              class="mb-4"
+            ></v-textarea>
+
+            <v-text-field
+              v-model="eventoEditando.data_evento"
+              label="Data do Evento"
+              type="date"
+              variant="outlined"
+              class="mb-4"
+            ></v-text-field>
+
+            <v-select
+              v-model="eventoEditando.cor"
+              :items="coresDisponiveis"
+              label="Cor do Evento"
+              variant="outlined"
+              class="mb-4"
+            >
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props">
+                  <template v-slot:prepend>
+                    <v-avatar :color="item.value" size="20"></v-avatar>
+                  </template>
+                </v-list-item>
+              </template>
+              <template v-slot:selection="{ item }">
+                <div class="d-flex align-center">
+                  <v-avatar :color="item.value" size="20" class="mr-2"></v-avatar>
+                  {{ item.title }}
+                </div>
+              </template>
+            </v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="flat" @click="modalEditarEvento = false">
+            Cancelar
+          </v-btn>
+          <v-btn
+            :loading="loadingEvento"
+            color="primary"
+            variant="flat"
+            @click="salvarEdicaoEvento"
+          >
+            Salvar Alterações
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog de confirmação de exclusão de evento -->
+    <v-dialog v-model="dialogExclusaoEvento" max-width="400px">
+      <v-card>
+        <v-card-title class="text-h5">
+          Confirmar Exclusão
+        </v-card-title>
+        <v-card-text>
+          Tem certeza que deseja excluir o evento "<strong>{{ eventoParaExcluir?.titulo }}</strong>"?
+          <br><br>
+          Esta ação não pode ser desfeita.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="flat" @click="dialogExclusaoEvento = false">
+            Cancelar
+          </v-btn>
+          <v-btn
+            :loading="excluindoEvento"
+            color="primary"
+            variant="flat"
+            @click="excluirEvento"
+          >
+            Excluir
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -543,20 +826,54 @@ export default defineComponent({
       modalPostagem: false,
       modalEvento: false,
       modalUpload: false,
+      dialogNovoEvento: false,
       uploadLoaging: false,
       tabAtiva: 'upload',
       tabAtivaPostagem: 'criar',
       carregandoMinistracoes: false,
       carregandoPostagens: false,
+      carregandoEventos: false,
       excluindoArquivo: false,
+      excluindoEvento: false,
+      loadingEvento: false,
+      loadingPostagem: false,
       dialogExclusao: false,
       dialogExclusaoPostagem: false,
+      dialogExclusaoEvento: false,
+      modalEditarEvento: false,
       ministracoes: [] as any[],
       postagens: [] as any[],
+      eventosAdmin: [] as any[],
       ministracaoParaExcluir: null as any,
       postagemParaExcluir: null as any,
+      eventoParaExcluir: null as any,
+      eventoEditando: {} as any,
       imagensVisualizacao: [] as string[],
       dialogImagens: false,
+      
+      // Calendário customizado
+      mesAtual: new Date().getMonth(),
+      anoAtual: new Date().getFullYear(),
+      dataSelecionadaCalendario: null as string | null,
+      
+      nomesMeses: [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ],
+      
+      diasSemana: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+      
+      coresDisponiveis: [
+        { title: 'Azul', value: '#1976d2' },
+        { title: 'Vermelho', value: '#d32f2f' },
+        { title: 'Verde', value: '#388e3c' },
+        { title: 'Laranja', value: '#f57c00' },
+        { title: 'Roxo', value: '#7b1fa2' },
+        { title: 'Rosa', value: '#c2185b' },
+        { title: 'Ciano', value: '#0097a7' },
+        { title: 'Indigo', value: '#303f9f' }
+      ],
+      
       stats: {
         posts: 15,
         events: 8,
@@ -568,18 +885,89 @@ export default defineComponent({
         conteudo: "",
       },
       novoEvento: {
-        nome: "",
+        titulo: "",
         descricao: "",
-        data: "",
-        hora: "",
-        local: "",
+        cor: "#1976d2",
       },
       arquivos: [] as File[],
       novoArquivo: {
         titulo: "",
       },
-      loading: false,
-    };
+    }
+  },
+
+  computed: {
+    diasCalendario() {
+      const dias = [];
+      const primeiroDia = new Date(this.anoAtual, this.mesAtual, 1);
+      const ultimoDia = new Date(this.anoAtual, this.mesAtual + 1, 0);
+      const primeiroDiaSemana = primeiroDia.getDay();
+      
+      // Dias do mês anterior
+      const mesAnterior = new Date(this.anoAtual, this.mesAtual, 0);
+      for (let i = primeiroDiaSemana - 1; i >= 0; i--) {
+        const dia = mesAnterior.getDate() - i;
+        const dataString = new Date(this.anoAtual, this.mesAtual - 1, dia).toISOString().split('T')[0];
+        dias.push({
+          numero: dia,
+          data: dataString,
+          mesAtual: false,
+          hoje: false,
+          selecionado: false,
+          eventos: []
+        });
+      }
+      
+      // Dias do mês atual
+      for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+        const dataCompleta = new Date(this.anoAtual, this.mesAtual, dia);
+        const dataString = dataCompleta.toISOString().split('T')[0];
+        const hoje = new Date();
+        const isHoje = dataCompleta.toDateString() === hoje.toDateString();
+        const isSelecionado = this.dataSelecionadaCalendario === dataString;
+        
+        const eventosDodia = this.eventosAdmin.filter((evento: any) => {
+          const dataEvento = new Date(evento.data_evento);
+          return dataEvento.getDate() === dia &&
+                 dataEvento.getMonth() === this.mesAtual &&
+                 dataEvento.getFullYear() === this.anoAtual;
+        });
+        
+        dias.push({
+          numero: dia,
+          data: dataString,
+          mesAtual: true,
+          hoje: isHoje,
+          selecionado: isSelecionado,
+          eventos: eventosDodia
+        });
+      }
+      
+      // Completar com dias do próximo mês
+      const diasRestantes = 42 - dias.length;
+      for (let dia = 1; dia <= diasRestantes; dia++) {
+        const dataString = new Date(this.anoAtual, this.mesAtual + 1, dia).toISOString().split('T')[0];
+        dias.push({
+          numero: dia,
+          data: dataString,
+          mesAtual: false,
+          hoje: false,
+          selecionado: false,
+          eventos: []
+        });
+      }
+      
+      return dias;
+    },
+
+    eventosNaDataSelecionada() {
+      if (!this.dataSelecionadaCalendario) return [];
+      
+      return this.eventosAdmin.filter((evento: any) => {
+        const dataEvento = new Date(evento.data_evento).toISOString().split('T')[0];
+        return dataEvento === this.dataSelecionadaCalendario;
+      });
+    }
   },
 
   async mounted() {
@@ -659,6 +1047,164 @@ export default defineComponent({
 
     abrirModalEvento() {
       this.modalEvento = true;
+      this.carregarEventosAdmin();
+    },
+
+    async carregarEventosAdmin() {
+      this.carregandoEventos = true;
+      try {
+        const response = await this.HTTP("GET", "calendario/get-eventos");
+        if (response && response.data) {
+          this.eventosAdmin = response.data.eventos || [];
+        }
+      } catch (error) {
+        console.error("Erro ao carregar eventos:", error);
+        this.$toast.error("Erro ao carregar eventos.");
+      } finally {
+        this.carregandoEventos = false;
+      }
+    },
+
+    mesAnterior() {
+      if (this.mesAtual === 0) {
+        this.mesAtual = 11;
+        this.anoAtual--;
+      } else {
+        this.mesAtual--;
+      }
+    },
+
+    proximoMes() {
+      if (this.mesAtual === 11) {
+        this.mesAtual = 0;
+        this.anoAtual++;
+      } else {
+        this.mesAtual++;
+      }
+    },
+
+    selecionarDia(dia: any) {
+      if (dia.mesAtual) {
+        this.dataSelecionadaCalendario = dia.data;
+      }
+    },
+
+    abrirDialogNovoEvento() {
+      if (!this.dataSelecionadaCalendario) {
+        this.$toast.info("Por favor, selecione uma data no calendário primeiro.");
+        return;
+      }
+      this.dialogNovoEvento = true;
+    },
+
+    fecharModalEvento() {
+      this.modalEvento = false;
+      this.dataSelecionadaCalendario = null;
+    },
+
+    fecharDialogNovoEvento() {
+      this.dialogNovoEvento = false;
+      this.novoEvento = {
+        titulo: "",
+        descricao: "",
+        cor: "#1976d2",
+      };
+    },
+
+    formatarDataSelecionada(data: string) {
+      if (!data) return '';
+      return new Date(data).toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    },
+
+    async criarEvento() {
+      if (!this.novoEvento.titulo || !this.dataSelecionadaCalendario) {
+        this.$toast.info("Por favor, preencha o título e selecione uma data.");
+        return;
+      }
+
+      this.loadingEvento = true;
+      try {
+        const response = await this.HTTP("POST", "calendario/create-evento", {
+          titulo: this.novoEvento.titulo,
+          descricao: this.novoEvento.descricao,
+          data_evento: this.dataSelecionadaCalendario,
+          cor: this.novoEvento.cor
+        });
+
+        if (response) {
+          this.$toast.success("Evento criado com sucesso!");
+          this.fecharDialogNovoEvento();
+          await this.carregarEventosAdmin();
+        }
+      } catch (error) {
+        console.error("Erro ao criar evento:", error);
+        this.$toast.error("Erro ao criar evento. Tente novamente.");
+      } finally {
+        this.loadingEvento = false;
+      }
+    },
+
+    editarEvento(evento: any) {
+      this.eventoEditando = { ...evento };
+      this.modalEditarEvento = true;
+    },
+
+    async salvarEdicaoEvento() {
+      if (!this.eventoEditando.titulo || !this.eventoEditando.data_evento) {
+        this.$toast.info("Por favor, preencha o título e a data.");
+        return;
+      }
+
+      this.loadingEvento = true;
+      try {
+        const response = await this.HTTP("PUT", `calendario/update-evento/${this.eventoEditando.id}`, {
+          titulo: this.eventoEditando.titulo,
+          descricao: this.eventoEditando.descricao,
+          data_evento: this.eventoEditando.data_evento,
+          cor: this.eventoEditando.cor
+        });
+
+        if (response) {
+          this.$toast.success("Evento atualizado com sucesso!");
+          this.modalEditarEvento = false;
+          this.eventoEditando = {};
+          await this.carregarEventosAdmin();
+        }
+      } catch (error) {
+        this.$toast.error("Erro ao atualizar evento. Tente novamente.");
+      } finally {
+        this.loadingEvento = false;
+      }
+    },
+
+    confirmarExclusaoEvento(evento: any) {
+      this.eventoParaExcluir = evento;
+      this.dialogExclusaoEvento = true;
+    },
+
+    async excluirEvento() {
+      if (!this.eventoParaExcluir) return;
+      
+      this.excluindoEvento = true;
+      try {
+        const response = await this.HTTP("DELETE", `calendario/delete-evento/${this.eventoParaExcluir.id}`);
+        if (response) {
+          this.$toast.success("Evento excluído com sucesso!");
+          this.dialogExclusaoEvento = false;
+          this.eventoParaExcluir = null;
+          await this.carregarEventosAdmin();
+        }
+      } catch (error) {
+        console.error("Erro ao excluir evento:", error);
+        this.$toast.error("Erro ao excluir evento.");
+      } finally {
+        this.excluindoEvento = false;
+      }
     },
 
     abrirModalUpload() {
@@ -735,7 +1281,7 @@ export default defineComponent({
         this.$toast.info("Por favor, preencha o título e o conteúdo da postagem.");
         return;
       }
-      this.loading = true;
+      this.loadingPostagem = true;
       try {
         const formData = new FormData();
         formData.append("titulo", this.novaPostagem.titulo);
@@ -762,13 +1308,8 @@ export default defineComponent({
       } catch (error) {
         this.$toast.error("Erro ao criar postagem. Tente novamente.");
       } finally {
-        this.loading = false;
+        this.loadingPostagem = false;
       }
-    },
-
-    async criarEvento() {
-      try {
-      } catch (error) {}
     },
 
     async fazerUpload() {
@@ -880,5 +1421,93 @@ export default defineComponent({
   text-transform: none;
   font-weight: 600;
   letter-spacing: 0.5px;
+}
+
+/* Estilos do calendário customizado */
+.calendar-header {
+  background: #af1d36;
+  color: white;
+}
+
+.calendar-header-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #af1d36;
+  color: white;
+}
+
+.calendar-header-day {
+  padding: 12px 8px;
+  text-align: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calendar-header-day:last-child {
+  border-right: none;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: #333;
+}
+
+.calendar-day {
+  background: #1e1e1e;
+  min-height: 80px;
+  padding: 8px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid transparent;
+}
+
+.calendar-day:hover {
+  background: #2a2a2a;
+}
+
+.calendar-day.outro-mes {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.calendar-day.hoje {
+  background: rgba(175, 29, 54, 0.1);
+  border-color: #af1d36;
+}
+
+.calendar-day.selecionado {
+  background: rgba(175, 29, 54, 0.2) !important;
+  border-color: #af1d36 !important;
+  box-shadow: 0 0 10px rgba(175, 29, 54, 0.5);
+}
+
+.calendar-day.com-evento {
+  background: rgba(175, 29, 54, 0.05);
+}
+
+.day-number {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.eventos-indicator {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.evento-mini {
+  cursor: pointer;
+  text-transform: none;
+  font-size: 9px;
+  height: 16px;
+  min-width: 0;
 }
 </style>
