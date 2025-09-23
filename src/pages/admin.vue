@@ -1014,7 +1014,7 @@ export default defineComponent({
 
     visualizarImagens(postagem: any) {
       if (postagem.images && postagem.images.length > 0) {
-        const baseUrl = 'http://localhost:3000';
+        const baseUrl = 'https://missaoredimepzo.com/api/';
         this.imagensVisualizacao = postagem.images.map((img: string) => baseUrl + img);
         this.dialogImagens = true;
       }
@@ -1239,7 +1239,7 @@ export default defineComponent({
     },
 
     baixarArquivo(url: string) {
-      const baseUrl = 'http://localhost:3000';
+      const baseUrl = 'https://missaoredimepzo.com/api';
       window.open(baseUrl + url, '_blank');
     },
 

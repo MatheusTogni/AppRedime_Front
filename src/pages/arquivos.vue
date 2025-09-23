@@ -333,7 +333,7 @@ export default defineComponent({
     async baixarArquivo(arquivo: any) {
       this.baixandoId = arquivo.id;
       try {
-        const response = await fetch(`http://localhost:3000/ministration/download/${arquivo.id}`);
+        const response = await fetch(`https://missaoredimepzo.com/api/ministration/download/${arquivo.id}`);
         
         if (response.ok) {
           const blob = await response.blob();
