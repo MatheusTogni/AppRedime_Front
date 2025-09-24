@@ -60,9 +60,7 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
-      },
+      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Redime',
         short_name: 'Redime',
@@ -76,19 +74,14 @@ export default defineConfig({
             src: 'pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'maskable'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'maskable'
           },
-          {
-            src: 'favicon.ico',
-            sizes: '64x64 32x32 24x24 16x16',
-            type: 'image/x-icon'
-          }
         ]
       }
     }),
@@ -118,7 +111,8 @@ export default defineConfig({
     ],
   },
   server: {
-    port: 3000
+    port: 3000,
+    cors: true,
   },
   css: {
     preprocessorOptions: {
