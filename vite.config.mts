@@ -57,30 +57,26 @@ export default defineConfig({
         ],
       },
     }),
-    VitePWA({ // <-- novo plugin PWA
+    VitePWA({ 
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Meu App Vuetify',
         short_name: 'VuetifyApp',
         description: 'Meu projeto Vuetify 3 como PWA',
-        theme_color: '#1976D2',
+        theme_color: '#af1d36',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
+            purpose: 'maskable'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
+            purpose: 'maskable'
           },
         ],
       },
