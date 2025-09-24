@@ -57,14 +57,17 @@ export default defineConfig({
         ],
       },
     }),
-    VitePWA({ 
+    VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Meu App Vuetify',
-        short_name: 'VuetifyApp',
-        description: 'Meu projeto Vuetify 3 como PWA',
-        theme_color: '#af1d36',
+        name: 'Ministrações Redime',
+        short_name: 'Ministrações Redime',
+        description: 'Calendário de Ministrações Redime',
+        theme_color: '#6A1B9A',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
