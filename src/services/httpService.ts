@@ -1,7 +1,7 @@
 import axios, { type AxiosResponse, type AxiosRequestConfig } from 'axios';
 import type { HttpMethod } from '@/interfaces';
 
-const API_BASE_URL = 'https://missaoredimepzo.com/api/';
+const API_BASE_URL = 'https://missaoredimepzo.com/';
 
 class HttpService {
   constructor() {
@@ -49,7 +49,7 @@ class HttpService {
     params?: any,
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}/${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}/api/${endpoint}`;
     
     switch (method.toUpperCase()) {
       case 'GET':
