@@ -186,7 +186,7 @@ export default defineComponent({
   methods: {
     async loadBibleData() {
       try {
-        const response = await fetch('/biblias/NVI/biblia_nvi_estruturada.json');
+  const response = await fetch('/arquivos/biblias/NVI/biblia_nvi_estruturada.json');
         if (!response.ok) {
           throw new Error('Erro ao carregar dados da bíblia');
         }
