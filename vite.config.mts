@@ -5,7 +5,6 @@ import Fonts from 'unplugin-fonts/vite'
 import Layouts from 'vite-plugin-vue-layouts-next'
 import Vue from '@vitejs/plugin-vue'
 import VueRouter from 'unplugin-vue-router/vite'
-import { VitePWA } from 'vite-plugin-pwa'
 import { VueRouterAutoImports } from 'unplugin-vue-router'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 
@@ -57,33 +56,6 @@ export default defineConfig({
           },
         ],
       },
-    }),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
-      manifest: {
-        name: 'Redime',
-        short_name: 'Redime',
-        description: 'Aplicativo da Igreja Redime',
-        theme_color: '#af1d36',
-        background_color: '#121212',
-        display: 'standalone',
-        start_url: '/',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-        ]
-      }
     }),
   ],
   optimizeDeps: {
