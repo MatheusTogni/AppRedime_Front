@@ -212,13 +212,10 @@ export default defineComponent({
       if (!imagePath) {
         return '';
       }
-      
       if (imagePath.startsWith('https://') || imagePath.startsWith('http://')) {
         return imagePath;
       }
-
-      const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-      return `https://missaoredimepzo.com${cleanPath}`;
+      return `https://missaoredimepzo.com${imagePath}`;
     },
 
     async loadPosts() {
