@@ -218,7 +218,7 @@ export default defineComponent({
       }
 
       const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-      return `https://missaoredimepzo.com/api/${cleanPath}`;
+      return `https://missaoredimepzo.com${cleanPath}`;
     },
 
     async loadPosts() {
