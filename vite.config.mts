@@ -78,6 +78,20 @@ export default defineConfig({
               },
             },
           },
+          {
+            urlPattern: /\/arquivos\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'arquivos-biblia',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
       },
       manifest: {
