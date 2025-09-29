@@ -60,6 +60,26 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,eot}'],
+        globIgnores: [],
+        runtimeCaching: [
+          {
+            urlPattern: /\/fonts\/mdi\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mdi-fonts',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'Redime',
         short_name: 'Redime',

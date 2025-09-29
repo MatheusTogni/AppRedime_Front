@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 import 'unfonts.css'
+import '/public/fonts/mdi/font/css/materialdesignicons.css'
 
 const app = createApp(App)
 
