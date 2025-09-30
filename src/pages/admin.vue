@@ -902,73 +902,63 @@ export default defineComponent({
       const primeiroDia = new Date(this.anoAtual, this.mesAtual, 1);
       const ultimoDia = new Date(this.anoAtual, this.mesAtual + 1, 0);
       const primeiroDiaSemana = primeiroDia.getDay();
-      
+
       // Dias do mês anterior
       const mesAnterior = new Date(this.anoAtual, this.mesAtual, 0);
-      // helper para formatar data local no formato YYYY-MM-DD sem converter para UTC
-      const formatLocalDate = (d: Date) => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-      };
-
       for (let i = primeiroDiaSemana - 1; i >= 0; i--) {
         const dia = mesAnterior.getDate() - i;
-        const dataString = formatLocalDate(new Date(this.anoAtual, this.mesAtual - 1, dia));
+        const dataString = `${String(dia).padStart(2, '0')}/${String(this.mesAtual).padStart(2, '0')}/${this.anoAtual}`;
         dias.push({
           numero: dia,
           data: dataString,
           mesAtual: false,
           hoje: false,
-          selecionado: false,
-          eventos: []
+          eventos: [],
+          selecionado: false
         });
       }
-      
+
       // Dias do mês atual
       for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
-  const dataCompleta = new Date(this.anoAtual, this.mesAtual, dia);
-  const dataString = formatLocalDate(dataCompleta);
+        const dataString = `${String(dia).padStart(2, '0')}/${String(this.mesAtual + 1).padStart(2, '0')}/${this.anoAtual}`;
         const hoje = new Date();
-        const isHoje = dataCompleta.toDateString() === hoje.toDateString();
-        const isSelecionado = this.dataSelecionadaCalendario === dataString;
-        
-        const eventosDodia = this.eventosAdmin.filter((evento: any) => {
-          // Preferir a propriedade normalizada _localDate ou _localDateObj quando disponível
-          if (evento._localDate) {
-            return evento._localDate === dataString;
-          }
-          const dataEvento = new Date(evento.data_evento);
-          return dataEvento.getDate() === dia &&
-                 dataEvento.getMonth() === this.mesAtual &&
-                 dataEvento.getFullYear() === this.anoAtual;
-        });
-        
+        const isHoje = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}` === dataString;
+
+        const eventosDodia = this.eventosAdmin.filter(evento => evento.data_evento === dataString);
+
+        // Verifica se este dia está selecionado
+        let selecionado = false;
+        if (this.dataSelecionadaCalendario) {
+          // dataSelecionadaCalendario está no formato 'YYYY-MM-DD'
+          const [anoSel, mesSel, diaSel] = this.dataSelecionadaCalendario.split('-');
+          const dataSelString = `${String(Number(diaSel)).padStart(2, '0')}/${String(Number(mesSel)).padStart(2, '0')}/${anoSel}`;
+          selecionado = dataSelString === dataString;
+        }
+
         dias.push({
           numero: dia,
           data: dataString,
           mesAtual: true,
           hoje: isHoje,
-          selecionado: isSelecionado,
-          eventos: eventosDodia
+          eventos: eventosDodia,
+          selecionado
         });
       }
-      
+
       // Completar com dias do próximo mês
       const diasRestantes = 42 - dias.length;
       for (let dia = 1; dia <= diasRestantes; dia++) {
-  const dataString = formatLocalDate(new Date(this.anoAtual, this.mesAtual + 1, dia));
+        const dataString = `${String(dia).padStart(2, '0')}/${String(this.mesAtual + 2).padStart(2, '0')}/${this.anoAtual}`;
         dias.push({
           numero: dia,
           data: dataString,
           mesAtual: false,
           hoje: false,
-          selecionado: false,
-          eventos: []
+          eventos: [],
+          selecionado: false
         });
       }
-      
+
       return dias;
     },
 
