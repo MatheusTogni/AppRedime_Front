@@ -1,7 +1,7 @@
 import axios, { type AxiosResponse, type AxiosRequestConfig } from 'axios';
 import type { HttpMethod } from '@/interfaces';
 
-const API_BASE_URL = 'https://missaoredimepzo.com/';
+export const API_BASE_URL = 'https://missaoredimepzo.com/';
 
 class HttpService {
   constructor() {

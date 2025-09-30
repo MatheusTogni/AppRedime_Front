@@ -172,6 +172,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import type { Post, PostsResponse } from "@/interfaces";
+import { API_BASE_URL } from '@/services/httpService';
 
 export default defineComponent({
   name: "PostagensPage",
@@ -215,7 +216,24 @@ export default defineComponent({
       if (imagePath.startsWith('https://') || imagePath.startsWith('http://')) {
         return imagePath;
       }
-      return `https://missaoredimepzo.com${imagePath}`;
+      // Backend serves static files at /uploads via express. In production the backend
+      // may be exposed under the /api prefix (e.g. reverse proxy maps /api -> backend).
+      // Endpoints in this app are called via `${API_BASE_URL}/api/...`, so to be safe
+      // we build image URLs as `${API_BASE_URL}/api${imagePath}` unless the imagePath
+      // already contains /api or is an absolute URL.
+      const base = API_BASE_URL.replace(/\/$/, '');
+      // If imagePath already starts with '/api', return base + imagePath
+      if (imagePath.startsWith('/api')) {
+        return `${base}${imagePath}`;
+      }
+
+      // Ensure single slash between base and /api
+      const full = `${base}/api${imagePath}`;
+      // Debug: ajuda a inspecionar a URL gerada no console do navegador
+      // Remova ou comente em produção se preferir
+      // eslint-disable-next-line no-console
+      console.debug('[Postagens] image url:', full);
+      return full;
     },
 
     async loadPosts() {
