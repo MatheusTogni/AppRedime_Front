@@ -277,9 +277,16 @@ export default {
       
       // Dias do mês anterior
       const mesAnterior = new Date(this.anoAtual, this.mesAtual, 0);
+      const formatLocalDate = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
       for (let i = primeiroDiaSemana - 1; i >= 0; i--) {
         const dia = mesAnterior.getDate() - i;
-        const dataString = new Date(this.anoAtual, this.mesAtual - 1, dia).toISOString().split('T')[0];
+        const dataString = formatLocalDate(new Date(this.anoAtual, this.mesAtual - 1, dia));
         dias.push({
           numero: dia,
           data: dataString,
@@ -291,12 +298,13 @@ export default {
       
       // Dias do mês atual
       for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
-        const dataCompleta = new Date(this.anoAtual, this.mesAtual, dia);
-        const dataString = dataCompleta.toISOString().split('T')[0];
+  const dataCompleta = new Date(this.anoAtual, this.mesAtual, dia);
+  const dataString = formatLocalDate(dataCompleta);
         const hoje = new Date();
         const isHoje = dataCompleta.toDateString() === hoje.toDateString();
         
         const eventosDodia = this.eventos.filter((evento) => {
+          if (evento._localDate) return evento._localDate === dataString;
           const dataEvento = new Date(evento.data_evento);
           return dataEvento.getDate() === dia &&
                  dataEvento.getMonth() === this.mesAtual &&
@@ -315,7 +323,7 @@ export default {
       // Completar com dias do próximo mês
       const diasRestantes = 42 - dias.length;
       for (let dia = 1; dia <= diasRestantes; dia++) {
-        const dataString = new Date(this.anoAtual, this.mesAtual + 1, dia).toISOString().split('T')[0];
+        const dataString = formatLocalDate(new Date(this.anoAtual, this.mesAtual + 1, dia));
         dias.push({
           numero: dia,
           data: dataString,
@@ -339,7 +347,21 @@ export default {
       try {
         const response = await this.HTTP("GET", "calendario/get-eventos");
         if (response && response.data) {
-          this.eventos = response.data.eventos || [];
+          this.eventos = (response.data.eventos || []).map((ev) => {
+            const copy = { ...ev };
+            if (copy.data_evento) {
+              const d = new Date(copy.data_evento);
+              const y = d.getUTCFullYear();
+              const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(d.getUTCDate()).padStart(2, '0');
+              copy._localDate = `${y}-${m}-${day}`;
+              copy._localDateObj = new Date(y, Number(m) - 1, Number(day));
+            } else {
+              copy._localDate = null;
+              copy._localDateObj = null;
+            }
+            return copy;
+          });
         }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
@@ -381,32 +403,15 @@ export default {
     },
 
     formatarDataEvento(data) {
-      if (!data) return '';
-      return new Date(data).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
+      return data; // A data já está formatada pelo backend
     },
 
     formatarDataCompleta(data) {
-      if (!data) return '';
-      return new Date(data).toLocaleDateString('pt-BR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      return data; // A data já está formatada pelo backend
     },
 
     formatarDataSelecionada(data) {
-      if (!data) return '';
-      return new Date(data).toLocaleDateString('pt-BR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      return data; // A data já está formatada pelo backend
     }
   }
 };

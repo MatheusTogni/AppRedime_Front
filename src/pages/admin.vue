@@ -905,9 +905,17 @@ export default defineComponent({
       
       // Dias do mês anterior
       const mesAnterior = new Date(this.anoAtual, this.mesAtual, 0);
+      // helper para formatar data local no formato YYYY-MM-DD sem converter para UTC
+      const formatLocalDate = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
       for (let i = primeiroDiaSemana - 1; i >= 0; i--) {
         const dia = mesAnterior.getDate() - i;
-        const dataString = new Date(this.anoAtual, this.mesAtual - 1, dia).toISOString().split('T')[0];
+        const dataString = formatLocalDate(new Date(this.anoAtual, this.mesAtual - 1, dia));
         dias.push({
           numero: dia,
           data: dataString,
@@ -920,13 +928,17 @@ export default defineComponent({
       
       // Dias do mês atual
       for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
-        const dataCompleta = new Date(this.anoAtual, this.mesAtual, dia);
-        const dataString = dataCompleta.toISOString().split('T')[0];
+  const dataCompleta = new Date(this.anoAtual, this.mesAtual, dia);
+  const dataString = formatLocalDate(dataCompleta);
         const hoje = new Date();
         const isHoje = dataCompleta.toDateString() === hoje.toDateString();
         const isSelecionado = this.dataSelecionadaCalendario === dataString;
         
         const eventosDodia = this.eventosAdmin.filter((evento: any) => {
+          // Preferir a propriedade normalizada _localDate ou _localDateObj quando disponível
+          if (evento._localDate) {
+            return evento._localDate === dataString;
+          }
           const dataEvento = new Date(evento.data_evento);
           return dataEvento.getDate() === dia &&
                  dataEvento.getMonth() === this.mesAtual &&
@@ -946,7 +958,7 @@ export default defineComponent({
       // Completar com dias do próximo mês
       const diasRestantes = 42 - dias.length;
       for (let dia = 1; dia <= diasRestantes; dia++) {
-        const dataString = new Date(this.anoAtual, this.mesAtual + 1, dia).toISOString().split('T')[0];
+  const dataString = formatLocalDate(new Date(this.anoAtual, this.mesAtual + 1, dia));
         dias.push({
           numero: dia,
           data: dataString,
@@ -962,9 +974,10 @@ export default defineComponent({
 
     eventosNaDataSelecionada() {
       if (!this.dataSelecionadaCalendario) return [];
-      
       return this.eventosAdmin.filter((evento: any) => {
-        const dataEvento = new Date(evento.data_evento).toISOString().split('T')[0];
+        if (evento._localDate) return evento._localDate === this.dataSelecionadaCalendario;
+        const d = new Date(evento.data_evento);
+        const dataEvento = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         return dataEvento === this.dataSelecionadaCalendario;
       });
     }
@@ -981,6 +994,7 @@ export default defineComponent({
   },
 
   methods: {
+    // helper removido (usaremos Date nativo para formatação)
     async logout() {
       try {
         await this.authStore.logout();
@@ -1055,7 +1069,22 @@ export default defineComponent({
       try {
         const response = await this.HTTP("GET", "calendario/get-eventos");
         if (response && response.data) {
-          this.eventosAdmin = response.data.eventos || [];
+          this.eventosAdmin = (response.data.eventos || []).map((ev: any) => {
+            const copy = { ...ev };
+            if (copy.data_evento) {
+              // Normalizar usando getters UTC para evitar shift de timezone
+              const d = new Date(copy.data_evento);
+              const y = d.getUTCFullYear();
+              const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+              const day = String(d.getUTCDate()).padStart(2, '0');
+              copy._localDate = `${y}-${m}-${day}`;
+              copy._localDateObj = new Date(y, Number(m) - 1, Number(day));
+            } else {
+              copy._localDate = null;
+              copy._localDateObj = null;
+            }
+            return copy;
+          });
         }
       } catch (error) {
         console.error("Erro ao carregar eventos:", error);
@@ -1084,8 +1113,15 @@ export default defineComponent({
     },
 
     selecionarDia(dia: any) {
+      if (!dia) return;
+      // Se o dia pertence ao mês atual, constrói a data localmente para evitar problemas
+      // com parsing/UTC. Caso contrário, ignora (ou poderia navegar para outro mês).
       if (dia.mesAtual) {
-        this.dataSelecionadaCalendario = dia.data;
+        const d = new Date(this.anoAtual, this.mesAtual, dia.numero);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        this.dataSelecionadaCalendario = `${y}-${m}-${day}`;
       }
     },
 
@@ -1112,13 +1148,7 @@ export default defineComponent({
     },
 
     formatarDataSelecionada(data: string) {
-      if (!data) return '';
-      return new Date(data).toLocaleDateString('pt-BR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      return data; // A data já está formatada pelo backend
     },
 
     async criarEvento() {
@@ -1229,13 +1259,14 @@ export default defineComponent({
     },
 
     formatarData(data: string) {
-      return new Date(data).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      if (!data) return '';
+      const d = new Date(data);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
     },
 
     baixarArquivo(url: string) {
