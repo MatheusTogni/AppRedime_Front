@@ -929,10 +929,8 @@ export default defineComponent({
         // Verifica se este dia está selecionado
         let selecionado = false;
         if (this.dataSelecionadaCalendario) {
-          // dataSelecionadaCalendario está no formato 'YYYY-MM-DD'
-          const [anoSel, mesSel, diaSel] = this.dataSelecionadaCalendario.split('-');
-          const dataSelString = `${String(Number(diaSel)).padStart(2, '0')}/${String(Number(mesSel)).padStart(2, '0')}/${anoSel}`;
-          selecionado = dataSelString === dataString;
+          // dataSelecionadaCalendario está no formato 'DD/MM/YYYY'
+          selecionado = this.dataSelecionadaCalendario === dataString;
         }
 
         dias.push({
@@ -1100,9 +1098,7 @@ export default defineComponent({
     selecionarDia(dia: any) {
       if (!dia) return;
       if (dia.mesAtual) {
-        // Converte de DD/MM/YYYY para YYYY-MM-DD
-        const [diaSel, mesSel, anoSel] = dia.data.split('/');
-        this.dataSelecionadaCalendario = `${anoSel}-${mesSel}-${diaSel}`;
+        this.dataSelecionadaCalendario = dia.data;
       }
     },
 
