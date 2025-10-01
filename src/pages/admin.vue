@@ -964,12 +964,7 @@ export default defineComponent({
 
     eventosNaDataSelecionada() {
       if (!this.dataSelecionadaCalendario) return [];
-      return this.eventosAdmin.filter((evento: any) => {
-        if (evento._localDate) return evento._localDate === this.dataSelecionadaCalendario;
-        const d = new Date(evento.data_evento);
-        const dataEvento = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        return dataEvento === this.dataSelecionadaCalendario;
-      });
+      return this.eventosAdmin.filter(evento => evento.data_evento === this.dataSelecionadaCalendario);
     }
   },
 
@@ -1104,14 +1099,8 @@ export default defineComponent({
 
     selecionarDia(dia: any) {
       if (!dia) return;
-      // Se o dia pertence ao mês atual, constrói a data localmente para evitar problemas
-      // com parsing/UTC. Caso contrário, ignora (ou poderia navegar para outro mês).
       if (dia.mesAtual) {
-        const d = new Date(this.anoAtual, this.mesAtual, dia.numero);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        this.dataSelecionadaCalendario = `${y}-${m}-${day}`;
+        this.dataSelecionadaCalendario = dia.data;
       }
     },
 
