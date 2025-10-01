@@ -1101,6 +1101,10 @@ export default defineComponent({
       if (!dia) return;
       if (dia.mesAtual) {
         this.dataSelecionadaCalendario = dia.data;
+        this.diasCalendario = this.diasCalendario.map(d => ({
+          ...d,
+          selecionado: d.data === dia.data
+        }));
       }
     },
 
