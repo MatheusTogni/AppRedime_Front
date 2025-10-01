@@ -1100,11 +1100,9 @@ export default defineComponent({
     selecionarDia(dia: any) {
       if (!dia) return;
       if (dia.mesAtual) {
-        this.dataSelecionadaCalendario = dia.data;
-        this.diasCalendario = this.diasCalendario.map(d => ({
-          ...d,
-          selecionado: d.data === dia.data
-        }));
+        // Converte de DD/MM/YYYY para YYYY-MM-DD
+        const [diaSel, mesSel, anoSel] = dia.data.split('/');
+        this.dataSelecionadaCalendario = `${anoSel}-${mesSel}-${diaSel}`;
       }
     },
 
