@@ -264,8 +264,8 @@ export default {
       hoje.setHours(0, 0, 0, 0);
       
       return this.eventos
-        .filter(evento => new Date(evento.data_evento) >= hoje)
-        .sort((a, b) => new Date(a.data_evento) - new Date(b.data_evento))
+        .filter(evento => evento._localDateObj && evento._localDateObj >= hoje)
+        .sort((a, b) => a._localDateObj - b._localDateObj)
         .slice(0, 6); // Mostrar apenas os próximos 6 eventos para dar espaço ao calendário
     },
 
@@ -304,11 +304,7 @@ export default {
         const isHoje = dataCompleta.toDateString() === hoje.toDateString();
         
         const eventosDodia = this.eventos.filter((evento) => {
-          if (evento._localDate) return evento._localDate === dataString;
-          const dataEvento = new Date(evento.data_evento);
-          return dataEvento.getDate() === dia &&
-                 dataEvento.getMonth() === this.mesAtual &&
-                 dataEvento.getFullYear() === this.anoAtual;
+          return evento._localDate === dataString;
         });
         
         dias.push({
@@ -350,12 +346,10 @@ export default {
           this.eventos = (response.data.eventos || []).map((ev) => {
             const copy = { ...ev };
             if (copy.data_evento) {
-              const d = new Date(copy.data_evento);
-              const y = d.getUTCFullYear();
-              const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-              const day = String(d.getUTCDate()).padStart(2, '0');
-              copy._localDate = `${y}-${m}-${day}`;
-              copy._localDateObj = new Date(y, Number(m) - 1, Number(day));
+              // data_evento vem no formato DD/MM/YYYY
+              const [day, month, year] = copy.data_evento.split('/');
+              copy._localDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              copy._localDateObj = new Date(Number(year), Number(month) - 1, Number(day));
             } else {
               copy._localDate = null;
               copy._localDateObj = null;
