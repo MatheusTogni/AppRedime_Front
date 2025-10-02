@@ -119,9 +119,18 @@
     <!-- Modal para Nova Postagem -->
     <v-dialog v-model="modalPostagem" max-width="800px" persistent>
       <v-card>
-        <v-card-title class="text-h5 bg-primary white--text">
-          <v-icon left color="white" class="mr-3">mdi-post</v-icon>
-          Postagens
+        <v-card-title class="text-h5 bg-primary white--text d-flex justify-space-between align-center">
+          <div class="d-flex align-center">
+            <v-icon left color="white" class="mr-3">mdi-post</v-icon>
+            Postagens
+          </div>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            color="white"
+            size="small"
+            @click="modalPostagem = false"
+          ></v-btn>
         </v-card-title>
         <v-card-text class="pa-0">
           <v-tabs v-model="tabAtivaPostagem" class="mb-4">
@@ -252,9 +261,18 @@
     <!-- Modal para Novo Evento -->
     <v-dialog v-model="modalEvento" max-width="1000px" persistent>
       <v-card>
-        <v-card-title class="text-h5 bg-primary white--text">
-          <v-icon left color="white" class="mr-3">mdi-calendar-plus</v-icon>
-          Criar Evento
+        <v-card-title class="text-h5 bg-primary white--text d-flex justify-space-between align-center">
+          <div class="d-flex align-center">
+            <v-icon left color="white" class="mr-3">mdi-calendar-plus</v-icon>
+            Criar Evento
+          </div>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            color="white"
+            size="small"
+            @click="fecharModalEvento"
+          ></v-btn>
         </v-card-title>
         
         <v-card-text class="pa-6">
@@ -495,9 +513,18 @@
     <!-- Modal para Upload de Arquivos -->
     <v-dialog v-model="modalUpload" max-width="800px" persistent>
       <v-card>
-        <v-card-title class="text-h5 bg-primary white--text">
-          <v-icon left color="white" class="mr-3">mdi-cloud-upload</v-icon>
-           Ministrações
+        <v-card-title class="text-h5 bg-primary white--text d-flex justify-space-between align-center">
+          <div class="d-flex align-center">
+            <v-icon left color="white" class="mr-3">mdi-cloud-upload</v-icon>
+            Ministrações
+          </div>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            color="white"
+            size="small"
+            @click="modalUpload = false"
+          ></v-btn>
         </v-card-title>
         <v-card-text class="pa-0">
           <v-tabs v-model="tabAtiva" class="mb-4">
