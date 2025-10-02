@@ -19,7 +19,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/doacoes',
-    name: 'Doações',
+    name: 'Ofertas',
     component: () => import('../pages/doacoes.vue')
   },
   {

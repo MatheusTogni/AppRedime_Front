@@ -51,8 +51,8 @@
                 >
                   <v-card-text class="text-center pa-6">
                     <v-icon size="48" color="#af1d36" class="mb-3">mdi-hand-coin</v-icon>
-                    <h3 class="shortcut-title">Doações</h3>
-                    <p class="shortcut-description">Contribuir via PIX</p>
+                    <h3 class="shortcut-title">Ofertas</h3>
+                    <p class="shortcut-description">Faça sua Oferta/Dízimo</p>
                   </v-card-text>
                 </v-card>
               </v-col>

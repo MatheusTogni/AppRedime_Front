@@ -45,7 +45,7 @@
 
         <v-list-item
           prepend-icon="mdi-hand-coin"
-          title="Doações"
+          title="Ofertas"
           value="doacoes"
           to="/doacoes"
           @click="drawer = false"
