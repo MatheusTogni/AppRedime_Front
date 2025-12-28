@@ -201,7 +201,7 @@ export default defineComponent({
   methods: {
     async loadBibleData() {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const apiUrl = 'https://missaoredimepzo.com/api';
         const response = await fetch(`${apiUrl}/bible/books`);
         if (!response.ok) {
           throw new Error('Erro ao carregar dados da bíblia');
