@@ -300,35 +300,28 @@ export default defineComponent({
       }
       
       try {
-        // Fazer requisição direta para a API GetBible (client-side)
-        const bookNumber = this.bookNumbers[this.selectedBook];
-        const translationCode = 'almeida'; // Sempre usar almeida por enquanto
-        const url = `https://getbible.net/v2/${translationCode}/${bookNumber}/${this.selectedChapter}.json`;
-        
-        console.log('🔍 Buscando versículos:', { book: this.selectedBook, bookNumber, chapter: this.selectedChapter, url });
-        
-        const response = await fetch(url);
+        const apiUrl = 'https://missaoredimepzo.com/api';
+        const bookAbbrev = this.bookMapping[this.selectedBook];
+        const response = await fetch(
+          `${apiUrl}/bible/verses/${this.selectedVersion}/${bookAbbrev}/${this.selectedChapter}`
+        );
         
         if (!response.ok) {
-          throw new Error(`Erro ao carregar versículos: ${response.status}`);
+          throw new Error('Erro ao carregar versículos');
         }
         
         const data = await response.json();
         
-        console.log('✅ Resposta da API:', data);
-        
         if (data.verses) {
-          // A API retorna os versículos como objeto, precisamos converter para array
-          this.verses = Object.values(data.verses).map((verse: any) => ({
-            number: verse.verse,
+          this.verses = data.verses.map((verse: any) => ({
+            number: verse.number,
             text: verse.text
           }));
-          console.log('📖 Total de versículos carregados:', this.verses.length);
         } else {
           this.verses = [];
         }
       } catch (error) {
-        console.error('❌ Erro ao carregar versículos:', error);
+        console.error('Erro ao carregar versículos:', error);
         this.verses = [];
       }
     }
