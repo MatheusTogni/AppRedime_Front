@@ -157,7 +157,6 @@ export default defineComponent({
         .filter(book => book.toLowerCase().includes(this.searchBook.toLowerCase()))
         .map(book => ({ title: book, value: book }));
       
-      console.log('📋 Livros filtrados para', this.selectedTestament + ':', filtered.length, filtered);
       return filtered;
     },
     filteredBooks() {
@@ -189,10 +188,7 @@ export default defineComponent({
           throw new Error('Erro ao carregar dados da bíblia');
         }
         this.bibliaData = await response.json();
-        
-        console.log('📚 Bíblia carregada localmente');
-        
-        // Ordem correta dos livros da Bíblia (exatamente como estão no JSON)
+
         const bibleOrder = [
           // Antigo Testamento
           'Gênesis', 'Êxodo', 'Levítico', 'Números', 'Deuteronômio', 
@@ -229,7 +225,6 @@ export default defineComponent({
           this.bookTestaments[book] = oldTestamentBooks.includes(book) ? 'old' : 'new';
         });
         
-        console.log('✅ Total de livros carregados:', this.allBooks.length);
       } catch (error) {
         console.error('Erro ao carregar bíblia:', error);
       }

@@ -38,4 +38,3 @@ if (packageVersion != scssVersion) {
     // Not good, almost published the wrong version
     throw new Error(`Error: package "${packageVersion}" != scss/variables.scss "${previewVersion}"`);
 }
-console.log(`Success: ${packageVersion} looks good!`);
