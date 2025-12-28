@@ -26,14 +26,7 @@
    <v-dialog v-model="dialogSelect" persistent max-width="400" max-height="700">
       <v-card>
         <v-card-title class="d-flex flex-column align-center" style="gap: 12px;">
-          <v-select
-            v-model="selectedVersion"
-            :items="versionOptions"
-            label="Versão da Bíblia"
-            variant="outlined"
-            density="compact"
-            style="max-width: 250px;"
-          ></v-select>
+
           <v-btn-toggle
             v-model="selectedTestament"
             mandatory
@@ -137,38 +130,28 @@
   </v-container>
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from 'vue';
-import type { Verse, Chapter, BibleData } from '@/interfaces';
 
 export default defineComponent({
   name: 'BibliaPage',
   data() {
     return {
-      bibliaData: {} as BibleData,
-      selectedTestament: 'new' as 'old' | 'new',
-      selectedBook: null as string | null,
-      selectedChapter: null as number | null,
-      verses: [] as Verse[],
+      bibliaData: {},
+      selectedTestament: 'new',
+      selectedBook: null,
+      selectedChapter: null,
+      verses: [],
       searchBook: '',
       dialogSelect: false,
-      selectedVersion: 'nvi',
-      versionOptions: [
-        { title: 'NVI - Nova Versão Internacional', value: 'nvi' },
-        { title: 'ACF - Almeida Corrigida Fiel', value: 'acf' },
-        { title: 'ARA - Almeida Revista Atualizada', value: 'ra' },
-        { title: 'NVT - Nova Versão Transformadora', value: 'nvt' }
-      ],
-      bookMapping: {} as Record<string, string>,
-      bookTestaments: {} as Record<string, string>,
-      bookNumbers: {} as Record<string, number>,
-      allBooks: [] as string[],
-      expandedBook: null as string | null,
-      fadeState: null as 'in' | 'out' | null 
+      bookTestaments: {},
+      allBooks: [],
+      expandedBook: null,
+      fadeState: null 
     };
   },
   computed: {
-    bookOptions(): { title: string; value: string }[] {
+    bookOptions() {
       const filtered = this.allBooks
         .filter(book => this.bookTestaments[book] === this.selectedTestament)
         .filter(book => book.toLowerCase().includes(this.searchBook.toLowerCase()))
@@ -177,10 +160,10 @@ export default defineComponent({
       console.log('📋 Livros filtrados para', this.selectedTestament + ':', filtered.length, filtered);
       return filtered;
     },
-    filteredBooks(): { title: string; value: string }[] {
+    filteredBooks() {
       return this.bookOptions;
     },
-    chapterOptions(): { title: string; value: number }[] {
+    chapterOptions() {
       if (!this.selectedBook || !this.bibliaData[this.selectedBook]) {
         return [];
       }
@@ -189,11 +172,11 @@ export default defineComponent({
         value: chapter.chapter
       }));
     },
-    hasPrevChapter(): boolean {
+    hasPrevChapter() {
       if (!this.selectedBook || !this.selectedChapter) return false;
       return this.selectedChapter > 1;
     },
-    hasNextChapter(): boolean {
+    hasNextChapter() {
       if (!this.selectedBook || !this.selectedChapter || !this.bibliaData[this.selectedBook]) return false;
       return this.selectedChapter < this.bibliaData[this.selectedBook].length;
     }
@@ -201,44 +184,57 @@ export default defineComponent({
   methods: {
     async loadBibleData() {
       try {
-        const apiUrl = 'https://missaoredimepzo.com/api';
-        const response = await fetch(`${apiUrl}/bible/books`);
+        const response = await fetch('/arquivos/biblias/NVI/biblia_nvi_estruturada.json');
         if (!response.ok) {
           throw new Error('Erro ao carregar dados da bíblia');
         }
-        const books = await response.json();
+        this.bibliaData = await response.json();
         
-        console.log('📚 Livros recebidos da API:', books);
+        console.log('📚 Bíblia carregada localmente');
         
-        // Criar mapeamento de nome para abbrev e estrutura de capítulos
-        this.bibliaData = {};
-        this.bookMapping = {};
+        // Ordem correta dos livros da Bíblia (exatamente como estão no JSON)
+        const bibleOrder = [
+          // Antigo Testamento
+          'Gênesis', 'Êxodo', 'Levítico', 'Números', 'Deuteronômio', 
+          'Josué', 'Juízes', 'Rute', 
+          '1 Samuel', '2 Samuel', '1 Reis', '2 Reis', 
+          '1 Crônicas', '2 Crônicas', 'Esdras', 'Neemias', 'Ester', 
+          'Jó', 'Salmos', 'Provérbios', 'Eclesiastes', 'Cânticos', 
+          'Isaías', 'Jeremias', 'Lamentações de Jeremias', 'Ezequiel', 'Daniel', 
+          'Oséias', 'Joel', 'Amós', 'Obadias', 'Jonas', 'Miquéias', 'Naum', 
+          'Habacuque', 'Sofonias', 'Ageu', 'Zacarias', 'Malaquias',
+          // Novo Testamento
+          'Mateus', 'Marcos', 'Lucas', 'João', 'Atos',
+          'Romanos', '1 Coríntios', '2 Coríntios', 'Gálatas', 'Efésios', 
+          'Filipenses', 'Colossenses', '1 Tessalonicenses', '2 Tessalonicenses',
+          '1 Timóteo', '2 Timóteo', 'Tito', 'Filemom', 'Hebreus',
+          'Tiago', '1 Pedro', '2 Pedro', '1 João', '2 João', '3 João', 'Judas', 'Apocalipse'
+        ];
+        
+        const oldTestamentBooks = [
+          'Gênesis', 'Êxodo', 'Levítico', 'Números', 'Deuteronômio', 
+          'Josué', 'Juízes', 'Rute', '1 Samuel', '2 Samuel', '1 Reis', '2 Reis', 
+          '1 Crônicas', '2 Crônicas', 'Esdras', 'Neemias', 'Ester', 'Jó', 
+          'Salmos', 'Provérbios', 'Eclesiastes', 'Cânticos', 'Isaías', 'Jeremias', 
+          'Lamentações de Jeremias', 'Ezequiel', 'Daniel', 'Oséias', 'Joel', 'Amós', 'Obadias', 
+          'Jonas', 'Miquéias', 'Naum', 'Habacuque', 'Sofonias', 'Ageu', 'Zacarias', 'Malaquias'
+        ];
+        
+        // Ordenar os livros pela ordem bíblica
+        const availableBooks = Object.keys(this.bibliaData);
+        this.allBooks = bibleOrder.filter(book => availableBooks.includes(book));
         this.bookTestaments = {};
-        this.bookNumbers = {};
-        this.allBooks = [];
         
-        books.forEach((book: any) => {
-          const bookName = book.name;
-          this.bookMapping[bookName] = book.abbrev.pt;
-          this.bookTestaments[bookName] = book.testament;
-          this.bookNumbers[bookName] = book.number;
-          this.allBooks.push(bookName);
-          
-          // Criar array de capítulos para cada livro
-          this.bibliaData[bookName] = Array.from({ length: book.chapters }, (_, i) => ({
-            chapter: i + 1,
-            verses: []
-          }));
+        this.allBooks.forEach(book => {
+          this.bookTestaments[book] = oldTestamentBooks.includes(book) ? 'old' : 'new';
         });
         
         console.log('✅ Total de livros carregados:', this.allBooks.length);
-        console.log('📖 Testamentos mapeados:', this.bookTestaments);
-        console.log('🎯 Testamento selecionado:', this.selectedTestament);
       } catch (error) {
         console.error('Erro ao carregar bíblia:', error);
       }
     },
-    selectBookDialog(book: string) {
+    selectBookDialog(book) {
       if (this.expandedBook === book) {
         this.expandedBook = null;
       } else {
@@ -249,17 +245,17 @@ export default defineComponent({
         this.selectedChapter = null;
       }
     },
-    selectChapter(chapter: number) {
+    selectChapter(chapter) {
       this.selectedChapter = chapter;
       this.loadVerses();
     },
-    selectChapterDialog(chapter: number) {
+    selectChapterDialog(chapter) {
       this.selectedChapter = chapter;
       this.loadVerses();
       this.dialogSelect = false;
       this.expandedBook = null; 
     },
-    triggerVersesFadeTransition(callback?: () => void) {
+    triggerVersesFadeTransition(callback) {
       this.fadeState = 'in';
       setTimeout(() => {
         if (callback) callback();
@@ -272,7 +268,7 @@ export default defineComponent({
     goToPrevChapter() {
       if (this.hasPrevChapter) {
         this.triggerVersesFadeTransition(() => {
-          this.selectChapter((this.selectedChapter as number) - 1);
+          this.selectChapter(this.selectedChapter - 1);
           this.scrollVersesToTop();
         });
       }
@@ -280,7 +276,7 @@ export default defineComponent({
     goToNextChapter() {
       if (this.hasNextChapter) {
         this.triggerVersesFadeTransition(() => {
-          this.selectChapter((this.selectedChapter as number) + 1);
+          this.selectChapter(this.selectedChapter + 1);
           this.scrollVersesToTop();
         });
       }
@@ -300,36 +296,17 @@ export default defineComponent({
       }
       
       try {
-        const apiUrl = 'https://missaoredimepzo.com/api';
-        const bookAbbrev = this.bookMapping[this.selectedBook];
-        const response = await fetch(
-          `${apiUrl}/bible/verses/${this.selectedVersion}/${bookAbbrev}/${this.selectedChapter}`
-        );
+        const bookChapters = this.bibliaData[this.selectedBook];
+        const chapterData = bookChapters.find(ch => ch.chapter === this.selectedChapter);
         
-        if (!response.ok) {
-          throw new Error('Erro ao carregar versículos');
-        }
-        
-        const data = await response.json();
-        
-        if (data.verses) {
-          this.verses = data.verses.map((verse: any) => ({
-            number: verse.number,
-            text: verse.text
-          }));
+        if (chapterData && chapterData.verses) {
+          this.verses = chapterData.verses;
         } else {
           this.verses = [];
         }
       } catch (error) {
         console.error('Erro ao carregar versículos:', error);
         this.verses = [];
-      }
-    }
-  },
-  watch: {
-    selectedVersion() {
-      if (this.selectedBook && this.selectedChapter) {
-        this.loadVerses();
       }
     }
   },
