@@ -39,8 +39,8 @@
             mandatory
             color="primary"
           >
-            <v-btn value="Antigo">Antigo</v-btn>
-            <v-btn value="Novo">Novo</v-btn>
+            <v-btn value="old">Antigo</v-btn>
+            <v-btn value="new">Novo</v-btn>
           </v-btn-toggle>
         </v-card-title>
         <v-card-text>
@@ -146,7 +146,7 @@ export default defineComponent({
   data() {
     return {
       bibliaData: {} as BibleData,
-      selectedTestament: 'Novo' as 'Antigo' | 'Novo',
+      selectedTestament: 'new' as 'old' | 'new',
       selectedBook: null as string | null,
       selectedChapter: null as number | null,
       verses: [] as Verse[],
@@ -157,26 +157,25 @@ export default defineComponent({
         { title: 'NVI - Nova Versão Internacional', value: 'nvi' },
         { title: 'ACF - Almeida Corrigida Fiel', value: 'acf' },
         { title: 'ARA - Almeida Revista Atualizada', value: 'ra' },
-        { title: 'NVT - Nova Tradução Viva', value: 'nvt' }
-      ],
-      oldTestamentBooks: [
-        'Gênesis', 'Êxodo', 'Levítico', 'Números', 'Deuteronômio', 'Josué', 'Juízes', 'Rute', '1Samuel', '2Samuel', '1Reis', '2Reis', '1Crônicas', '2Crônicas', 'Esdras', 'Neemias', 'Ester', 'Jó', 'Salmos', 'Provérbios', 'Eclesiastes', 'Cânticos', 'Isaías', 'Jeremias', 'Lamentações', 'Ezequiel', 'Daniel', 'Oseias', 'Joel', 'Amós', 'Obadias', 'Jonas', 'Miqueias', 'Naum', 'Habacuque', 'Sofonias', 'Ageu', 'Zacarias', 'Malaquias'
-      ],
-      newTestamentBooks: [
-        'Mateus', 'Marcos', 'Lucas', 'João', 'Atos', 'Romanos', '1Coríntios', '2Coríntios', 'Gálatas', 'Efésios', 'Filipenses', 'Colossenses', '1Tessalonicenses', '2Tessalonicenses', '1Timóteo', '2Timóteo', 'Tito', 'Filemom', 'Hebreus', 'Tiago', '1Pedro', '2Pedro', '1João', '2João', '3João', 'Judas', 'Apocalipse'
+        { title: 'NVT - Nova Versão Transformadora', value: 'nvt' }
       ],
       bookMapping: {} as Record<string, string>,
+      bookTestaments: {} as Record<string, string>,
+      bookNumbers: {} as Record<string, number>,
+      allBooks: [] as string[],
       expandedBook: null as string | null,
       fadeState: null as 'in' | 'out' | null 
     };
   },
   computed: {
     bookOptions(): { title: string; value: string }[] {
-      const books = this.selectedTestament === 'Antigo' ? this.oldTestamentBooks : this.newTestamentBooks;
-      return books
+      const filtered = this.allBooks
+        .filter(book => this.bookTestaments[book] === this.selectedTestament)
         .filter(book => book.toLowerCase().includes(this.searchBook.toLowerCase()))
-        .filter(book => this.bibliaData[book])
         .map(book => ({ title: book, value: book }));
+      
+      console.log('📋 Livros filtrados para', this.selectedTestament + ':', filtered.length, filtered);
+      return filtered;
     },
     filteredBooks(): { title: string; value: string }[] {
       return this.bookOptions;
@@ -202,19 +201,28 @@ export default defineComponent({
   methods: {
     async loadBibleData() {
       try {
-        const response = await fetch('https://www.abibliadigital.com.br/api/books');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiUrl}/bible/books`);
         if (!response.ok) {
           throw new Error('Erro ao carregar dados da bíblia');
         }
         const books = await response.json();
         
+        console.log('📚 Livros recebidos da API:', books);
+        
         // Criar mapeamento de nome para abbrev e estrutura de capítulos
         this.bibliaData = {};
         this.bookMapping = {};
+        this.bookTestaments = {};
+        this.bookNumbers = {};
+        this.allBooks = [];
         
         books.forEach((book: any) => {
           const bookName = book.name;
           this.bookMapping[bookName] = book.abbrev.pt;
+          this.bookTestaments[bookName] = book.testament;
+          this.bookNumbers[bookName] = book.number;
+          this.allBooks.push(bookName);
           
           // Criar array de capítulos para cada livro
           this.bibliaData[bookName] = Array.from({ length: book.chapters }, (_, i) => ({
@@ -222,6 +230,10 @@ export default defineComponent({
             verses: []
           }));
         });
+        
+        console.log('✅ Total de livros carregados:', this.allBooks.length);
+        console.log('📖 Testamentos mapeados:', this.bookTestaments);
+        console.log('🎯 Testamento selecionado:', this.selectedTestament);
       } catch (error) {
         console.error('Erro ao carregar bíblia:', error);
       }
@@ -288,27 +300,35 @@ export default defineComponent({
       }
       
       try {
-        const bookAbbrev = this.bookMapping[this.selectedBook];
-        const response = await fetch(
-          `https://www.abibliadigital.com.br/api/verses/${this.selectedVersion}/${bookAbbrev}/${this.selectedChapter}`
-        );
+        // Fazer requisição direta para a API GetBible (client-side)
+        const bookNumber = this.bookNumbers[this.selectedBook];
+        const translationCode = 'almeida'; // Sempre usar almeida por enquanto
+        const url = `https://getbible.net/v2/${translationCode}/${bookNumber}/${this.selectedChapter}.json`;
+        
+        console.log('🔍 Buscando versículos:', { book: this.selectedBook, bookNumber, chapter: this.selectedChapter, url });
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
-          throw new Error('Erro ao carregar versículos');
+          throw new Error(`Erro ao carregar versículos: ${response.status}`);
         }
         
         const data = await response.json();
         
+        console.log('✅ Resposta da API:', data);
+        
         if (data.verses) {
-          this.verses = data.verses.map((verse: any) => ({
-            number: verse.number,
+          // A API retorna os versículos como objeto, precisamos converter para array
+          this.verses = Object.values(data.verses).map((verse: any) => ({
+            number: verse.verse,
             text: verse.text
           }));
+          console.log('📖 Total de versículos carregados:', this.verses.length);
         } else {
           this.verses = [];
         }
       } catch (error) {
-        console.error('Erro ao carregar versículos:', error);
+        console.error('❌ Erro ao carregar versículos:', error);
         this.verses = [];
       }
     }
