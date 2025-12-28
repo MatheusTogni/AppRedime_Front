@@ -25,7 +25,15 @@
     </div>
    <v-dialog v-model="dialogSelect" persistent max-width="400" max-height="700">
       <v-card>
-        <v-card-title class="d-flex justify-center">
+        <v-card-title class="d-flex flex-column align-center" style="gap: 12px;">
+          <v-select
+            v-model="selectedVersion"
+            :items="versionOptions"
+            label="Versão da Bíblia"
+            variant="outlined"
+            density="compact"
+            style="max-width: 250px;"
+          ></v-select>
           <v-btn-toggle
             v-model="selectedTestament"
             mandatory
@@ -144,12 +152,20 @@ export default defineComponent({
       verses: [] as Verse[],
       searchBook: '',
       dialogSelect: false,
+      selectedVersion: 'nvi',
+      versionOptions: [
+        { title: 'NVI - Nova Versão Internacional', value: 'nvi' },
+        { title: 'ACF - Almeida Corrigida Fiel', value: 'acf' },
+        { title: 'ARA - Almeida Revista Atualizada', value: 'ra' },
+        { title: 'NVT - Nova Tradução Viva', value: 'nvt' }
+      ],
       oldTestamentBooks: [
         'Gênesis', 'Êxodo', 'Levítico', 'Números', 'Deuteronômio', 'Josué', 'Juízes', 'Rute', '1Samuel', '2Samuel', '1Reis', '2Reis', '1Crônicas', '2Crônicas', 'Esdras', 'Neemias', 'Ester', 'Jó', 'Salmos', 'Provérbios', 'Eclesiastes', 'Cânticos', 'Isaías', 'Jeremias', 'Lamentações', 'Ezequiel', 'Daniel', 'Oseias', 'Joel', 'Amós', 'Obadias', 'Jonas', 'Miqueias', 'Naum', 'Habacuque', 'Sofonias', 'Ageu', 'Zacarias', 'Malaquias'
       ],
       newTestamentBooks: [
         'Mateus', 'Marcos', 'Lucas', 'João', 'Atos', 'Romanos', '1Coríntios', '2Coríntios', 'Gálatas', 'Efésios', 'Filipenses', 'Colossenses', '1Tessalonicenses', '2Tessalonicenses', '1Timóteo', '2Timóteo', 'Tito', 'Filemom', 'Hebreus', 'Tiago', '1Pedro', '2Pedro', '1João', '2João', '3João', 'Judas', 'Apocalipse'
       ],
+      bookMapping: {} as Record<string, string>,
       expandedBook: null as string | null,
       fadeState: null as 'in' | 'out' | null 
     };
@@ -186,11 +202,26 @@ export default defineComponent({
   methods: {
     async loadBibleData() {
       try {
-        const response = await fetch('/arquivos/biblias/NVI/biblia_nvi_estruturada.json');
+        const response = await fetch('https://www.abibliadigital.com.br/api/books');
         if (!response.ok) {
           throw new Error('Erro ao carregar dados da bíblia');
         }
-        this.bibliaData = await response.json();
+        const books = await response.json();
+        
+        // Criar mapeamento de nome para abbrev e estrutura de capítulos
+        this.bibliaData = {};
+        this.bookMapping = {};
+        
+        books.forEach((book: any) => {
+          const bookName = book.name;
+          this.bookMapping[bookName] = book.abbrev.pt;
+          
+          // Criar array de capítulos para cada livro
+          this.bibliaData[bookName] = Array.from({ length: book.chapters }, (_, i) => ({
+            chapter: i + 1,
+            verses: []
+          }));
+        });
       } catch (error) {
         console.error('Erro ao carregar bíblia:', error);
       }
@@ -250,17 +281,42 @@ export default defineComponent({
         }
       });
     },
-    loadVerses() {
+    async loadVerses() {
       if (!this.selectedBook || !this.selectedChapter || !this.bibliaData[this.selectedBook]) {
         this.verses = [];
         return;
       }
-      const book = this.bibliaData[this.selectedBook];
-      const chapter = book.find(ch => ch.chapter === this.selectedChapter);
-      if (chapter && chapter.verses) {
-        this.verses = chapter.verses;
-      } else {
+      
+      try {
+        const bookAbbrev = this.bookMapping[this.selectedBook];
+        const response = await fetch(
+          `https://www.abibliadigital.com.br/api/verses/${this.selectedVersion}/${bookAbbrev}/${this.selectedChapter}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Erro ao carregar versículos');
+        }
+        
+        const data = await response.json();
+        
+        if (data.verses) {
+          this.verses = data.verses.map((verse: any) => ({
+            number: verse.number,
+            text: verse.text
+          }));
+        } else {
+          this.verses = [];
+        }
+      } catch (error) {
+        console.error('Erro ao carregar versículos:', error);
         this.verses = [];
+      }
+    }
+  },
+  watch: {
+    selectedVersion() {
+      if (this.selectedBook && this.selectedChapter) {
+        this.loadVerses();
       }
     }
   },
