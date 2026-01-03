@@ -26,6 +26,16 @@
    <v-dialog v-model="dialogSelect" persistent max-width="400" max-height="700">
       <v-card>
         <v-card-title class="d-flex flex-column align-center" style="gap: 12px;">
+          <v-select
+            v-model="selectedVersion"
+            :items="versionOptions"
+            item-title="text"
+            item-value="value"
+            label="Versão da Bíblia"
+            variant="outlined"
+            @update:model-value="onVersionChange"
+            style="width: 100%;"
+          ></v-select>
 
           <v-btn-toggle
             v-model="selectedTestament"
@@ -139,6 +149,12 @@ export default defineComponent({
     return {
       bibliaData: {},
       selectedTestament: 'new',
+      selectedVersion: 'NVI',
+      versionOptions: [
+        { text: 'NVI - Nova Versão Internacional', value: 'NVI' },
+        { text: 'ACF - Almeida Corrigida Fiel', value: 'ACF' },
+        { text: 'AA - Almeida Revisada', value: 'AA' }
+      ],
       selectedBook: null,
       selectedChapter: null,
       verses: [],
@@ -183,7 +199,13 @@ export default defineComponent({
   methods: {
     async loadBibleData() {
       try {
-        const response = await fetch('/arquivos/biblias/NVI/biblia_nvi_estruturada.json');
+        const versionMap = {
+          'NVI': 'nvi',
+          'ACF': 'acf',
+          'AA': 'aa'
+        };
+        const versionPath = versionMap[this.selectedVersion] || 'nvi';
+        const response = await fetch(`/arquivos/biblias/${this.selectedVersion}/biblia_${versionPath}_estruturada.json`);
         if (!response.ok) {
           throw new Error('Erro ao carregar dados da bíblia');
         }
@@ -228,6 +250,13 @@ export default defineComponent({
       } catch (error) {
         console.error('Erro ao carregar bíblia:', error);
       }
+    },
+    onVersionChange() {
+      this.loadBibleData().then(() => {
+        if (this.selectedBook && this.selectedChapter) {
+          this.loadVerses();
+        }
+      });
     },
     selectBookDialog(book) {
       if (this.expandedBook === book) {
